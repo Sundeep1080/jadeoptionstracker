@@ -454,7 +454,10 @@ body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospac
       <select id="sel_far" class="w100"><option>—</option></select></div>
     <div class="csep"></div>
     <div class="cg"><label>CMP</label>
-      <input id="inp_cmp" type="number" class="w80" value="24000" step="25" oninput="onCmp()"></div>
+      <div style="display:flex;gap:3px;align-items:center">
+        <input id="inp_cmp" type="number" class="w80" value="24000" step="25" oninput="onCmp()">
+        <button class="cbtn cbtn-d" onclick="fetchSpotCmp()" title="Fetch live NIFTY spot" style="font-size:9px;padding:3px 6px;align-self:stretch">⟳</button>
+      </div></div>
     <div class="cg"><label>off1·A</label>
       <input id="inp_o1" type="number" class="w56" value="200" step="25" oninput="onOff()"></div>
     <div class="cg"><label>off2</label>
@@ -837,6 +840,27 @@ async function kitePost(path,body){
 }
 
 // ═══════════════════════════════════════════════════════════════
+// LIVE SPOT CMP — fetch NIFTY 50 index price
+// ═══════════════════════════════════════════════════════════════
+async function fetchSpotCmp(){
+  try{
+    // NSE:NIFTY 50 index token is 256265
+    const r=await fetch(`${S.workerUrl}/kite/quote?i=NSE:NIFTY+50`,{
+      headers:{'Authorization':`token ${S.apiKey}:${S.accessToken}`,'X-Kite-Version':'3'}
+    });
+    if(!r.ok)return;
+    const d=await r.json();
+    const ltp=d?.data?.['NSE:NIFTY 50']?.last_price;
+    if(!ltp||isNaN(ltp))return;
+    const snapped=Math.round(ltp/50)*50; // snap to nearest 50 for ATM strikes
+    $('inp_cmp').value=snapped;
+    onCmp();
+    // Update header
+    $('hCmp').textContent=ltp.toFixed(0);
+  }catch(e){console.warn('spot fetch failed',e.message)}
+}
+
+// ═══════════════════════════════════════════════════════════════
 // INSTRUMENTS
 // ═══════════════════════════════════════════════════════════════
 // RFC-4180 compliant CSV parser — handles Kite's quoted fields with embedded commas
@@ -1003,6 +1027,7 @@ async function launch(){
   const ok=await loadInstruments();
   if(ok){
     onCmp();onOff();
+    await fetchSpotCmp();  // auto-fetch live NIFTY spot on launch
     goPage(0);
   }
 }
@@ -1698,6 +1723,7 @@ function toggleAuto(){
     },1000);
     S.autoTimer=setInterval(()=>{
       $('rlabel').textContent=`Live: ON (${iv}s)`;
+      fetchSpotCmp();   // refresh NIFTY spot on every auto-tick
       quotePage();S.countdown=iv;
     },iv*1000);
   }
