@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
-<title>⚡ JADE SUPREMA v15</title>
+<title>⚡ JADE SUPREMA v16</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -382,7 +382,7 @@ body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospac
 <div id="authWrap">
 <div class="abox">
   <div class="atitle">⚡ JADE SUPREMA</div>
-  <div class="asub">SPREAD PREMIUM TRACKER · v15</div>
+  <div class="asub">SPREAD PREMIUM TRACKER · v16</div>
 
   <div id="savedBadge" class="saved-badge">✓ Credentials saved — token valid for today</div>
 
@@ -767,14 +767,14 @@ async function exchangeToken(){
   const sec=$('a_sec').value.trim();
   const rt=$('a_rt').value.trim();
   if(!wk||!key||!sec||!rt){amsg('Fill all fields + request token','err');return}
-  amsg('Computing checksum and exchanging token…','inf');
+  amsg('Exchanging token via Cloudflare worker…','inf');
   try{
-    const checksum=await sha256hex(key+rt+sec);
-    const body=`api_key=${key}&request_token=${rt}&checksum=${checksum}`;
-    const r=await fetch(wk+'/kite/session/token',{
+    // Use the worker's dedicated /token route (not the generic /kite/ proxy)
+    // The worker computes the SHA256 checksum server-side for this route
+    const r=await fetch(wk+'/token',{
       method:'POST',
-      headers:{'X-Kite-Version':'3','Content-Type':'application/x-www-form-urlencoded'},
-      body
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({request_token:rt,api_key:key,api_secret:sec})
     });
     const d=await r.json();
     if(!d.data?.access_token)throw new Error(d.message||JSON.stringify(d));
@@ -829,11 +829,33 @@ async function kitePost(path,body){
 // ═══════════════════════════════════════════════════════════════
 // INSTRUMENTS
 // ═══════════════════════════════════════════════════════════════
+// RFC-4180 compliant CSV parser — handles Kite's quoted fields with embedded commas
 function parseCSV(text){
-  const lines=text.trim().split('\n');
-  const hdrs=lines[0].split(',').map(h=>h.trim());
-  return lines.slice(1).map(l=>{
-    const v=l.split(',');
+  const rows=[];
+  let cur=[],field='',inQ=false;
+  const pushField=()=>{cur.push(field.trim());field='';};
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],nx=text[i+1];
+    if(inQ){
+      if(ch==='"'&&nx==='"'){field+='"';i++;}
+      else if(ch==='"'){inQ=false;}
+      else field+=ch;
+    }else{
+      if(ch==='"'){inQ=true;}
+      else if(ch===','){pushField();}
+      else if(ch==='\r'||ch==='\n'){
+        pushField();
+        if(ch==='\r'&&nx==='\n')i++;
+        if(cur.some(Boolean))rows.push(cur);
+        cur=[];
+      }else field+=ch;
+    }
+  }
+  pushField();
+  if(cur.some(Boolean))rows.push(cur);
+  if(!rows.length)return[];
+  const hdrs=rows[0];
+  return rows.slice(1).map(v=>{
     const o={};hdrs.forEach((h,i)=>o[h]=(v[i]||'').trim());
     return o;
   });
@@ -845,16 +867,30 @@ async function loadInstruments(){
     const r=await fetch(`${S.workerUrl}/kite/instruments/NFO`,{
       headers:{'Authorization':`token ${S.apiKey}:${S.accessToken}`,'X-Kite-Version':'3'}
     });
+    // ▶ FIX: check HTTP status before parsing — 401/403 gives JSON error, not CSV
+    if(!r.ok){
+      const errText=await r.text();
+      let errMsg='';
+      try{const j=JSON.parse(errText);errMsg=j.message||j.error_type||errText.slice(0,200);}
+      catch(_){errMsg=errText.slice(0,200);}
+      throw new Error(`HTTP ${r.status}: ${errMsg}`);
+    }
     const text=await r.text();
+    if(!text||text.trim().startsWith('{'))throw new Error('Expected CSV, got JSON: '+text.slice(0,200));
     const all=parseCSV(text);
+    // ▶ FIX: normalise expiry key — Kite CSV expiry format is YYYY-MM-DD; trim any whitespace
     const nifty=all.filter(i=>i.name==='NIFTY'&&(i.instrument_type==='CE'||i.instrument_type==='PE'));
+    if(!nifty.length)throw new Error('0 NIFTY options found in CSV. Check auth token.');
     S.instruments=nifty;
     S.instrMap={};
     const exSet=new Set();
     nifty.forEach(i=>{
-      const k=`NIFTY_${i.instrument_type}_${Math.round(parseFloat(i.strike))}_${i.expiry}`;
-      S.instrMap[k]={token:i.instrument_token,sym:i.tradingsymbol,lot:parseInt(i.lot_size)||25};
-      exSet.add(i.expiry);
+      // ▶ FIX: normalise expiry to trim whitespace; normalise strike to integer string
+      const expNorm=(i.expiry||'').trim();
+      const strikeNorm=Math.round(parseFloat(i.strike));
+      const k=`NIFTY_${i.instrument_type}_${strikeNorm}_${expNorm}`;
+      S.instrMap[k]={token:(i.instrument_token||'').trim(),sym:i.tradingsymbol,lot:parseInt(i.lot_size)||25};
+      if(expNorm)exSet.add(expNorm);
     });
     S.expiries=[...exSet].sort();
     const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
@@ -872,25 +908,30 @@ async function loadInstruments(){
     set50dte();
     return true;
   }catch(e){
-    setSb('sbApi','Error','err');
-    console.error(e);
+    setSb('sbApi',e.message.slice(0,60),'err');
+    console.error('loadInstruments failed:',e);
     return false;
   }
 }
 
 function getToken(type,strike,expiry){
-  const k=`NIFTY_${type}_${Math.round(strike)}_${expiry}`;
+  // ▶ FIX: normalise both sides of the lookup — trim expiry, round strike
+  const k=`NIFTY_${type}_${Math.round(strike)}_${(expiry||'').trim()}`;
   return S.instrMap[k]||null;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// HISTORICAL DATA 
+// HISTORICAL DATA
 // ═══════════════════════════════════════════════════════════════
 const histCache={};
 
 function kiteTs(ts){
-  // "2024-01-15T09:15:00+0530" or "2024-01-15"
-  return Math.floor(new Date(ts).getTime()/1000);
+  // Kite returns "2024-01-15T09:15:00+0530" — the +0530 (no colon) is non-standard.
+  // Safari/Firefox return NaN for it. Normalise to RFC 3339 "+05:30" before parsing.
+  const norm=typeof ts==='string'
+    ? ts.replace(/([+-]\d{2})(\d{2})$/,'$1:$2')  // +0530 → +05:30
+    : ts;
+  return Math.floor(new Date(norm).getTime()/1000);
 }
 
 async function fetchHist(token,interval,from,to){
@@ -1191,7 +1232,24 @@ function setDir(id,dir){
   }));
 }
 
-function clearCache(id){delete S.data[id];histCache[Symbol()]={}} // note: clears by new key, harmless
+function clearCache(id){
+  delete S.data[id];
+  // ▶ FIX: actually remove all histCache entries whose key starts with any token for this spread
+  const sp=SP.find(s=>s.id===id);if(!sp)return;
+  const dir=S.dirs[id]||'bear';
+  const legs=sp.legs(S.cmp,getOff(),dir);
+  const exp=$('sel_exp').value,far=$('sel_far').value;
+  legs.forEach((_,i)=>{
+    const inpEl=$(`str_${id}_${i}`);
+    if(!inpEl)return;
+    const strike=parseFloat(inpEl.value)||legs[i].k;
+    const useExp=legs[i].far?far:exp;
+    const instr=getToken(legs[i].t,strike,useExp);
+    if(instr){
+      Object.keys(histCache).forEach(k=>{if(k.startsWith(instr.token+'_'))delete histCache[k];});
+    }
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════
 // CHART INIT
@@ -1466,16 +1524,28 @@ async function fetchQuotes(spIds){
   }
   if(!tokToInfo.size)return;
 
-  const toks=[...tokToInfo.keys()];
+  // ▶ FIX: Kite /quote API uses NFO:TRADINGSYMBOL, not numeric token
+  // Rebuild map keyed by tradingsymbol for quote lookup
+  const symToInfo=new Map();
+  for(const[tok,infos]of tokToInfo){
+    // tok here is the numeric instrument_token; get the sym from instrMap
+    let sym=tok;
+    for(const[k,v]of Object.entries(S.instrMap)){if(String(v.token)===tok){sym=v.sym;break;}}
+    if(!symToInfo.has(sym))symToInfo.set(sym,[]);
+    for(const info of infos)symToInfo.get(sym).push(info);
+  }
+
+  const syms=[...symToInfo.keys()];
   const qmap={};
-  // batch 400 at a time
-  for(let i=0;i<toks.length;i+=400){
-    const chunk=toks.slice(i,i+400);
+  // batch 400 symbols at a time
+  for(let i=0;i<syms.length;i+=400){
+    const chunk=syms.slice(i,i+400);
     try{
-      const params=chunk.map(t=>`i=NFO:${t}`).join('&');
+      const params=chunk.map(s=>`i=NFO:${encodeURIComponent(s)}`).join('&');
       const r=await fetch(`${S.workerUrl}/kite/quote?${params}`,{
         headers:{'Authorization':`token ${S.apiKey}:${S.accessToken}`,'X-Kite-Version':'3'}
       });
+      if(!r.ok){console.warn('quote HTTP error',r.status);continue;}
       const d=await r.json();
       Object.assign(qmap,d.data||{});
     }catch(e){console.warn('quote err',e.message)}
@@ -1484,8 +1554,9 @@ async function fetchQuotes(spIds){
   const acc={};
   for(const id of spIds)acc[id]={net:0,legs:[],ok:true};
 
-  for(const[tok,infos]of tokToInfo){
-    const q=qmap[`NFO:${tok}`];
+  // ▶ FIX: iterate symToInfo (keyed by tradingsymbol) to match qmap keys
+  for(const[sym,infos]of symToInfo){
+    const q=qmap[`NFO:${sym}`];
     for(const info of infos){
       const ltp=q?.last_price??null;
       const prev=q?.ohlc?.close??ltp;
