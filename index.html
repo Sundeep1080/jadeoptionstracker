@@ -762,7 +762,7 @@ function openKiteLogin(){
   const wk=$('a_worker').value.trim().replace(/\/$/,'');
   if(!wk){amsg('Enter Worker URL first','err');return}
   const cb=encodeURIComponent(wk+'/callback');
-  window.open(`https://kite.zerodha.com/connect/login?api_key=${key}&v=3`,'_blank');
+  window.open(`https://kite.zerodha.com/connect/login?api_key=${key}&v=3&redirect_params=${cb}`,'_blank');
   amsg('Login to Zerodha → copy Request Token from callback page → paste below','inf');
 }
 
@@ -874,7 +874,8 @@ function parseCSV(text){
 async function loadInstruments(){
   setSb('sbApi','Loading…','warn');
   try{
-    const r=await fetch(`${S.workerUrl}/kite/instruments/NFO`,{
+    const bust=Date.now();
+    const r=await fetch(`${S.workerUrl}/kite/instruments/NFO?_t=${bust}`,{
       headers:{'Authorization':`token ${S.apiKey}:${S.accessToken}`,'X-Kite-Version':'3'}
     });
     // ▶ FIX: check HTTP status before parsing — 401/403 gives JSON error, not CSV
