@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>⚡ JADE SUPREMA v15</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090d;--bg2:#0c111a;--bg3:#111922;--bg4:#18232e;
+  --b1:#1a2a38;--b2:#243648;--b3:#2e4259;
+  --txt:#9ab8cc;--dim:#3d5568;--hi:#f0c040;--hi2:#c08820;
+  --bull:#22d46e;--bull2:#0b4a28;--bear:#f04060;--bear2:#5a1828;
+  --blue:#2d9cdb;--blue2:#103a55;--cyan:#18c9a8;--cyan2:#064038;
+  --warn:#e8922a;--purp:#9455c8;--r:4px;
+  --hdr:44px;--cfg:48px;--nav:36px;--ref:34px;--sb:26px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:11px;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* ══ AUTH ═══════════════════════════════════════════════════════ */
+#authWrap{
+  position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse at 25% 35%,#0c1c2c,#04080e 70%);
+  display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;
+}
+.abox{
+  width:100%;max-width:480px;
+  background:linear-gradient(145deg,#0c1520,#070b10);
+  border:1px solid var(--b2);border-radius:10px;padding:24px;
+  position:relative;overflow:hidden;
+}
+.abox::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent 0%,var(--hi) 50%,transparent 100%)}
+.atitle{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;
+  color:var(--hi);text-align:center;letter-spacing:4px;margin-bottom:3px}
+.asub{text-align:center;color:var(--dim);font-size:9px;letter-spacing:2px;margin-bottom:22px}
+.step-hdr{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+  font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);
+}
+.step-num{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--blue2);border:1px solid var(--blue);
+  color:var(--blue);font-size:9px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.frow{margin-bottom:12px}
+.frow label{display:block;color:var(--dim);font-size:8.5px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.finp{
+  width:100%;background:var(--bg);border:1px solid var(--b2);
+  color:var(--txt);padding:8px 10px;border-radius:var(--r);
+  font-family:'JetBrains Mono',monospace;font-size:11px;transition:border-color .2s;
+}
+.finp:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(45,156,219,.12)}
+.abtn{
+  width:100%;padding:10px;font-family:'Orbitron',monospace;font-size:11px;
+  font-weight:700;letter-spacing:2px;border:none;border-radius:var(--r);
+  cursor:pointer;transition:all .18s;margin-top:4px;
+}
+.abtn-gold{background:linear-gradient(135deg,var(--hi),var(--hi2));color:#07090d}
+.abtn-blue{background:var(--blue2);border:1px solid var(--blue);color:#c0dcf0;margin-top:8px}
+.abtn-green{background:var(--bull2);border:1px solid var(--bull);color:#a0f0c0;margin-top:8px}
+.abtn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.abtn:active{transform:translateY(0)}
+.adiv{border-top:1px solid var(--b1);margin:16px 0 12px;padding-top:12px}
+.amsg{min-height:18px;font-size:10px;text-align:center;margin-top:8px;padding:4px}
+.amsg.ok{color:var(--bull)}.amsg.err{color:var(--bear)}.amsg.inf{color:var(--warn)}
+.token-box{
+  background:var(--bg);border:1px solid var(--bull2);border-radius:var(--r);
+  padding:8px 10px;font-size:11px;color:var(--bull);word-break:break-all;
+  margin-top:8px;display:none;cursor:pointer;
+}
+.saved-badge{
+  display:none;background:rgba(34,212,110,.1);border:1px solid var(--bull);
+  border-radius:var(--r);padding:4px 10px;font-size:9px;color:var(--bull);
+  text-align:center;margin-bottom:10px;
+}
+
+/* ══ MAIN LAYOUT ════════════════════════════════════════════════ */
+#mainApp{display:none;flex-direction:column;height:100%;overflow:hidden}
+
+/* ── Header ─────────────────────────────────────────── */
+.hdr{
+  height:var(--hdr);flex-shrink:0;
+  background:linear-gradient(90deg,#04080f,#07111e);
+  border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;padding:0 12px;gap:12px;
+}
+.htitle{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;
+  color:var(--hi);letter-spacing:3px;flex-shrink:0}
+.hmetrics{display:flex;gap:14px;align-items:center;flex:1;justify-content:flex-end;flex-wrap:wrap}
+.hmet{display:flex;flex-direction:column;align-items:center;min-width:40px}
+.hmet .v{font-size:13px;font-weight:700;color:var(--txt);font-family:'Orbitron',monospace}
+.hmet .l{font-size:7px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.gate-ok{color:var(--bull)!important}.gate-no{color:var(--bear)!important}
+.hbtn{padding:4px 8px;font-size:9px;border-radius:var(--r);border:1px solid var(--b2);
+  background:var(--bg3);color:var(--dim);cursor:pointer;font-family:'JetBrains Mono',monospace}
+.hbtn:hover{color:var(--txt);border-color:var(--b3)}
+
+/* ── Config ──────────────────────────────────────────── */
+.cfg{
+  height:var(--cfg);flex-shrink:0;
+  background:var(--bg2);border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;padding:0 10px;gap:8px;overflow-x:auto;
+}
+.cfg::-webkit-scrollbar{height:0}
+.cg{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.cg label{color:var(--dim);font-size:7.5px;letter-spacing:.5px;text-transform:uppercase}
+.cg select,.cg input{
+  background:var(--bg3);border:1px solid var(--b1);color:var(--txt);
+  padding:3px 6px;border-radius:var(--r);
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+}
+.cg select:focus,.cg input:focus{outline:none;border-color:var(--blue)}
+.w56{width:56px}.w80{width:80px}.w100{width:100px}.w120{width:120px}
+.csep{width:1px;height:28px;background:var(--b1);flex-shrink:0}
+.cbtn{
+  padding:4px 10px;font-size:9px;border-radius:var(--r);
+  font-family:'JetBrains Mono',monospace;cursor:pointer;border:1px solid;
+  flex-shrink:0;align-self:flex-end;margin-bottom:0;
+}
+.cbtn-g{background:var(--bull2);border-color:var(--bull);color:#b0f0c8}
+.cbtn-b{background:var(--blue2);border-color:var(--blue);color:#b0d8f0}
+.cbtn-d{background:var(--bg3);border-color:var(--b2);color:var(--dim)}
+.cbtn:hover{filter:brightness(1.15)}
+
+/* ── Nav ─────────────────────────────────────────────── */
+.nav{
+  height:var(--nav);flex-shrink:0;
+  background:var(--bg2);border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;padding:0 8px;gap:6px;overflow-x:auto;
+}
+.nav::-webkit-scrollbar{height:0}
+.npg{color:var(--hi);font-size:10px;font-weight:700;min-width:58px;flex-shrink:0}
+.narr{padding:3px 7px;background:var(--bg3);border:1px solid var(--b2);
+  color:var(--dim);border-radius:var(--r);cursor:pointer;font-size:11px;flex-shrink:0}
+.narr:hover{color:var(--txt)}
+.pill{
+  padding:3px 9px;border-radius:10px;font-size:8px;letter-spacing:.5px;
+  border:1px solid var(--b1);background:var(--bg3);color:var(--dim);
+  cursor:pointer;flex-shrink:0;white-space:nowrap;
+}
+.pill:hover{border-color:var(--b2);color:var(--txt)}
+.pill.on{background:var(--blue2);border-color:var(--blue);color:#c0dcf0}
+
+/* ── Refresh strip ───────────────────────────────────── */
+.ref{
+  height:var(--ref);flex-shrink:0;
+  background:var(--bg);border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;padding:0 10px;gap:8px;
+}
+.rdot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.rdot.run{background:var(--bull);animation:pulse 1.5s infinite}
+.rdot.err{background:var(--bear)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.rsel{
+  background:var(--bg3);border:1px solid var(--b1);color:var(--txt);
+  padding:3px 6px;border-radius:var(--r);font-family:'JetBrains Mono',monospace;font-size:9px;
+}
+.rlabel{font-size:9px;color:var(--dim);min-width:80px}
+.rnext{font-size:9px;color:var(--dim);min-width:60px}
+
+/* ══ SPREADS GRID ═══════════════════════════════════════════════ */
+#spreadsWrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px;padding-bottom:calc(var(--sb)+8px)}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:700px){.sgrid{grid-template-columns:1fr}}
+
+/* ══ SPREAD CARD ════════════════════════════════════════════════ */
+.card{
+  background:var(--bg2);border:1px solid var(--b1);border-radius:6px;
+  overflow:hidden;display:flex;flex-direction:column;position:relative;
+}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.card.L0 ::after,.card.l0::after{background:var(--cyan)}
+.card.l1::after{background:var(--blue)}
+.card.l2::after{background:var(--warn)}
+.card.l3::after{background:var(--purp)}
+.card.l4::after{background:var(--bull)}
+.card.tor::after{background:var(--hi)}
+.card.spl::after{background:var(--bear)}
+
+/* card top bar */
+.ctop{
+  background:var(--bg3);border-bottom:1px solid var(--b1);
+  padding:6px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:6px;
+}
+.cname{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;
+  color:var(--hi);letter-spacing:1px}
+.clegs{font-size:8.5px;margin-top:3px;line-height:1.5}
+.cbadges{display:flex;gap:3px;flex-shrink:0;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.bdg{display:inline-block;padding:1px 5px;border-radius:2px;
+  font-size:7.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.bdg-cr{background:#051a0d;border:1px solid var(--bull);color:var(--bull)}
+.bdg-dr{background:#200810;border:1px solid var(--bear);color:var(--bear)}
+.bdg-mx{background:#1a1005;border:1px solid var(--warn);color:var(--warn)}
+.bdg-lay{background:var(--bg4);border:1px solid var(--b2);color:var(--dim)}
+.bdg-dte-ok{background:#051a0d;border:1px solid var(--bull);color:var(--bull)}
+.bdg-dte-w{background:#1a1005;border:1px solid var(--warn);color:var(--warn)}
+.bdg-dte-x{background:#1a0508;border:1px solid var(--bear);color:var(--bear)}
+.cbtns{display:flex;gap:3px;align-items:center}
+.dirbtn{
+  padding:3px 7px;font-size:8.5px;border:1px solid var(--b2);
+  background:var(--bg3);color:var(--dim);border-radius:var(--r);cursor:pointer;
+  font-family:'JetBrains Mono',monospace;
+}
+.dirbtn.bull-on{background:var(--bull2);border-color:var(--bull);color:#b0f0c8}
+.dirbtn.bear-on{background:var(--bear2);border-color:var(--bear);color:#fcc}
+.cload{
+  padding:3px 8px;background:#1c2c10;border:1px solid var(--hi);
+  color:var(--hi);border-radius:var(--r);font-size:9px;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;
+}
+.cload:hover{background:#2a3e18}
+
+/* 5-cell stats bar */
+.sbar{display:flex;background:var(--bg);border-bottom:1px solid var(--b1)}
+.sc{flex:1;padding:5px 4px;text-align:center;border-right:1px solid var(--b1)}
+.sc:last-child{border-right:none}
+.sv{font-family:'Orbitron',monospace;font-size:12px;font-weight:700}
+.sl{font-size:7px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+.sv.hi{color:var(--hi)}.sv.live{color:var(--cyan)}
+.sv.pos{color:var(--bull)}.sv.neg{color:var(--bear)}
+.sv.neu{color:var(--dim)}.sv.warn{color:var(--warn)}
+
+/* decay legend */
+.dleg{
+  display:flex;align-items:center;gap:10px;padding:3px 10px;
+  background:var(--bg);border-bottom:1px dashed var(--b1);font-size:8px;color:var(--dim);
+  overflow-x:auto;flex-wrap:nowrap;
+}
+.dleg::-webkit-scrollbar{height:0}
+.dli{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.dlw{width:12px;height:2px;border-radius:1px;flex-shrink:0}
+
+/* chart label row */
+.clbl{
+  display:flex;align-items:center;gap:6px;padding:3px 10px;
+  background:var(--bg3);border-bottom:1px solid var(--b1);
+  font-size:8.5px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;
+}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--bull);
+  animation:pulse 2s infinite;flex-shrink:0}
+.clbl-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+
+/* chart containers */
+.cbox{background:var(--bg);position:relative;overflow:hidden}
+.cph{
+  height:280px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;color:var(--dim);gap:8px;
+}
+.cph-ico{font-size:28px;opacity:.2}
+.cph p{font-size:9.5px;text-align:center;line-height:1.6;max-width:200px}
+.pnlbox{background:var(--bg);border-top:1px solid var(--b1)}
+
+/* loading veil */
+.veil{
+  position:absolute;inset:0;background:rgba(7,9,13,.85);z-index:20;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+}
+.vspin{width:22px;height:22px;border:2px solid var(--b2);
+  border-top-color:var(--hi);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vtxt{font-size:9px;color:var(--dim)}
+.verr{padding:14px 16px;font-size:9.5px;color:var(--warn);text-align:center;line-height:1.7}
+
+/* entry row */
+.erow{
+  display:flex;align-items:center;gap:6px;padding:4px 8px;
+  background:var(--bg3);border-bottom:1px solid var(--b1);flex-wrap:wrap;
+}
+.einp{
+  width:80px;padding:3px 6px;background:var(--bg);border:1px solid var(--b1);
+  color:var(--hi);border-radius:var(--r);font-family:'JetBrains Mono',monospace;font-size:10px;
+}
+.einp:focus{outline:none;border-color:var(--blue)}
+.pnlv{font-size:11px;font-weight:700;margin-left:auto}
+.pnlv.pos{color:var(--bull)}.pnlv.neg{color:var(--bear)}.pnlv.neu{color:var(--dim)}
+.ebtn{padding:3px 7px;font-size:8px;border-radius:var(--r);
+  border:1px solid var(--b2);background:var(--bg3);color:var(--dim);cursor:pointer;
+  font-family:'JetBrains Mono',monospace}
+.ebtn:hover{color:var(--txt)}
+
+/* legs collapse */
+.lhdr{
+  padding:5px 10px;display:flex;justify-content:space-between;align-items:center;
+  cursor:pointer;background:var(--bg3);border-top:1px solid var(--b1);
+}
+.lhdr:hover{background:var(--bg4)}
+.lhdr span:first-child{color:var(--dim);font-size:8.5px;letter-spacing:.5px}
+.lhdr span:last-child{color:var(--dim);font-size:8.5px}
+.lbody{display:none;padding:4px 8px 8px}
+.ltbl{width:100%;border-collapse:collapse;font-size:9.5px}
+.ltbl th{color:var(--dim);padding:3px 5px;text-align:left;font-weight:400;
+  border-bottom:1px solid var(--b1);background:var(--bg)}
+.ltbl td{padding:3px 5px;border-bottom:1px solid rgba(26,42,56,.4)}
+.sell{color:var(--bear);font-weight:700}.buy{color:var(--bull);font-weight:700}
+.sinp{
+  width:74px;padding:2px 5px;background:var(--bg);border:1px solid var(--b1);
+  color:var(--cyan);border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:9.5px;
+  text-align:right;
+}
+.sinp:focus{outline:none;border-color:var(--blue)}
+
+/* live panel */
+.lpanel{background:var(--bg);border-bottom:1px solid var(--b1)}
+.lphdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 10px;background:var(--bg3);border-bottom:1px solid var(--b1);
+  font-size:9px;
+}
+.lptitle{color:var(--cyan);font-weight:700;letter-spacing:1px}
+.lpnet{
+  font-family:'Orbitron',monospace;font-size:16px;font-weight:700;
+  text-align:center;padding:6px 0 2px;
+}
+.lltbl{width:100%;border-collapse:collapse;font-size:9.5px}
+.lltbl th{color:var(--dim);padding:2px 8px;font-weight:400;
+  border-bottom:1px solid var(--b1);background:var(--bg)}
+.lltbl td{padding:2px 8px;border-bottom:1px solid rgba(26,42,56,.4)}
+
+/* ══ SUMMARY ════════════════════════════════════════════════════ */
+#summaryWrap{
+  display:none;flex:1;overflow-y:auto;padding:8px;
+  padding-bottom:calc(var(--sb)+8px);
+}
+.sumhdr{
+  display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;
+}
+.sumtitle{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;
+  color:var(--hi);letter-spacing:2px}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
+.scard{
+  background:var(--bg2);border:1px solid var(--b1);border-radius:6px;
+  overflow:hidden;cursor:pointer;transition:border-color .15s;
+}
+.scard:hover{border-color:var(--b2)}
+.sctop{
+  background:var(--bg3);border-bottom:1px solid var(--b1);
+  padding:5px 9px;display:flex;justify-content:space-between;align-items:center;
+}
+.scn{font-size:9px;font-weight:700;letter-spacing:.5px}
+.scbody{padding:7px 9px}
+.scnet{font-family:'Orbitron',monospace;font-size:14px;font-weight:700}
+.sclegs{color:var(--dim);font-size:8px;margin-top:3px;line-height:1.5}
+.spark{display:flex;align-items:flex-end;gap:1px;height:22px;margin-top:5px}
+.spark span{flex:1;min-width:2px;border-radius:1px 1px 0 0;opacity:.7}
+
+/* ══ STATUS BAR ═════════════════════════════════════════════════ */
+.sbar-foot{
+  height:var(--sb);flex-shrink:0;
+  background:var(--bg);border-top:1px solid var(--b1);
+  display:flex;align-items:center;padding:0 12px;gap:16px;position:fixed;bottom:0;left:0;right:0;
+}
+.sbi{font-size:9px;color:var(--dim)}
+.sbi span{color:var(--txt)}
+.sbi .ok{color:var(--bull)}.sbi .err{color:var(--bear)}.sbi .warn{color:var(--warn)}
+.sbt{margin-left:auto;font-size:9px;color:var(--dim)}
+
+/* ══ UTILITY ════════════════════════════════════════════════════ */
+.btn{
+  padding:4px 10px;font-size:9px;border-radius:var(--r);cursor:pointer;border:1px solid;
+  font-family:'JetBrains Mono',monospace;transition:all .15s;
+}
+.btn:hover{filter:brightness(1.15)}
+.btn-g{background:var(--bull2);border-color:var(--bull);color:#b0f0c8}
+.btn-b{background:var(--blue2);border-color:var(--blue);color:#b0d8f0}
+.btn-d{background:var(--bg3);border-color:var(--b2);color:var(--dim)}
+.btn-gold{background:#1c2a08;border-color:var(--hi);color:var(--hi)}
+.card-note{padding:3px 10px;font-size:8.5px;color:var(--warn);
+  background:rgba(232,146,42,.07);border-bottom:1px solid rgba(232,146,42,.2)}
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH ══════════════════════════════════════════════════ -->
+<div id="authWrap">
+<div class="abox">
+  <div class="atitle">⚡ JADE SUPREMA</div>
+  <div class="asub">SPREAD PREMIUM TRACKER · v15</div>
+
+  <div id="savedBadge" class="saved-badge">✓ Credentials saved — token valid for today</div>
+
+  <!-- STEP 1 -->
+  <div class="step-hdr"><div class="step-num">1</div>CLOUDFLARE WORKER URL</div>
+  <div class="frow">
+    <label>Your Worker URL (from Cloudflare deploy)</label>
+    <input id="a_worker" class="finp" type="url" placeholder="https://jade-kite.YOUR_NAME.workers.dev">
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="adiv"></div>
+  <div class="step-hdr"><div class="step-num">2</div>KITE CONNECT CREDENTIALS</div>
+  <div class="frow">
+    <label>API Key</label>
+    <input id="a_key" class="finp" type="text" placeholder="your_api_key" autocomplete="off">
+  </div>
+  <div class="frow">
+    <label>API Secret</label>
+    <input id="a_sec" class="finp" type="password" placeholder="your_api_secret">
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="adiv"></div>
+  <div class="step-hdr"><div class="step-num">3</div>MORNING TOKEN (daily — 2 min)</div>
+
+  <button class="abtn abtn-blue" onclick="openKiteLogin()">⟶ Open Kite Login in New Tab</button>
+
+  <div class="frow" style="margin-top:10px">
+    <label>Request Token (paste from callback page)</label>
+    <input id="a_rt" class="finp" type="text" placeholder="Paste request_token here after Zerodha login">
+  </div>
+  <button class="abtn abtn-green" onclick="exchangeToken()">⚡ Exchange → Get Access Token</button>
+  <div id="tokenBox" class="token-box" onclick="copyToken()" title="Tap to copy"></div>
+  <div id="authMsg" class="amsg"></div>
+
+  <button class="abtn abtn-gold" id="btnLaunch" onclick="launch()" style="margin-top:14px;display:none">
+    ◈ LAUNCH JADE SUPREMA
+  </button>
+</div>
+</div>
+
+<!-- ═══ MAIN APP ═══════════════════════════════════════════════ -->
+<div id="mainApp">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="htitle">⚡ JADE</div>
+    <div class="hmetrics">
+      <div class="hmet"><span class="v" id="hCmp">—</span><span class="l">CMP</span></div>
+      <div class="hmet"><span class="v" id="hExp">—</span><span class="l">EXPIRY</span></div>
+      <div class="hmet"><span class="v" id="hDte">—</span><span class="l">DTE</span></div>
+      <div class="hmet"><span class="v" id="hA1">—</span><span class="l">off1·A</span></div>
+      <div class="hmet"><span class="v gate-ok" id="hGate">GATE</span><span class="l">STATUS</span></div>
+      <button class="hbtn" onclick="showAuth()">⚙</button>
+    </div>
+  </div>
+
+  <!-- Config strip -->
+  <div class="cfg">
+    <div class="cg"><label>Expiry</label>
+      <select id="sel_exp" class="w120" onchange="onExpiry()"><option>Loading…</option></select></div>
+    <div class="cg"><label>Far Exp</label>
+      <select id="sel_far" class="w100"><option>—</option></select></div>
+    <div class="csep"></div>
+    <div class="cg"><label>CMP</label>
+      <input id="inp_cmp" type="number" class="w80" value="24000" step="25" oninput="onCmp()"></div>
+    <div class="cg"><label>off1·A</label>
+      <input id="inp_o1" type="number" class="w56" value="200" step="25" oninput="onOff()"></div>
+    <div class="cg"><label>off2</label>
+      <input id="inp_o2" type="number" class="w56" value="400" step="25" oninput="onOff()"></div>
+    <div class="cg"><label>off3</label>
+      <input id="inp_o3" type="number" class="w56" value="600" step="25" oninput="onOff()"></div>
+    <div class="cg"><label>off4</label>
+      <input id="inp_o4" type="number" class="w56" value="800" step="25" oninput="onOff()"></div>
+    <div class="cg"><label>off6</label>
+      <input id="inp_o6" type="number" class="w56" value="1200" step="25" oninput="onOff()"></div>
+    <div class="csep"></div>
+    <div class="cg"><label>Timeframe</label>
+      <select id="sel_tf" class="w80" onchange="onTf()">
+        <option value="minute">1 min</option>
+        <option value="3minute">3 min</option>
+        <option value="5minute">5 min</option>
+        <option value="15minute" selected>15 min</option>
+        <option value="30minute">30 min</option>
+        <option value="60minute">1 hr</option>
+        <option value="day">Daily</option>
+      </select></div>
+    <div class="cg"><label>From</label>
+      <input id="inp_from" type="date" class="w100"></div>
+    <div class="cg"><label>To</label>
+      <input id="inp_to" type="date" class="w100"></div>
+    <button class="cbtn cbtn-d" onclick="set50dte()" style="font-size:8px">50-DTE</button>
+    <button class="cbtn cbtn-g" onclick="loadPage()">↻ Load</button>
+    <button class="cbtn cbtn-b" onclick="toggleSummary()" id="btnSum">☰ All</button>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav">
+    <button class="narr" onclick="chgPage(-1)">◀</button>
+    <span class="npg" id="pgLabel">1/10</span>
+    <button class="narr" onclick="chgPage(1)">▶</button>
+    <div id="pills" style="display:flex;gap:4px;overflow-x:auto"></div>
+  </div>
+
+  <!-- Refresh strip -->
+  <div class="ref">
+    <div class="rdot" id="rdot"></div>
+    <span class="rlabel" id="rlabel">Live: OFF</span>
+    <select id="sel_ri" class="rsel">
+      <option value="10">10s</option>
+      <option value="30" selected>30s</option>
+      <option value="60">1m</option>
+      <option value="120">2m</option>
+      <option value="300">5m</option>
+    </select>
+    <button class="btn btn-g" id="btnAuto" onclick="toggleAuto()" style="font-size:9px;padding:3px 10px">▶ START</button>
+    <button class="btn btn-b" onclick="quotePage()" style="font-size:9px;padding:3px 10px">⟳ QUOTE</button>
+    <span class="rnext" id="rnext"></span>
+    <span style="margin-left:auto;color:var(--dim);font-size:8.5px" id="rbarcount"></span>
+  </div>
+
+  <!-- Spreads -->
+  <div id="spreadsWrap"><div class="sgrid" id="sgrid"></div></div>
+
+  <!-- Summary -->
+  <div id="summaryWrap">
+    <div class="sumhdr">
+      <span class="sumtitle">ALL SPREADS — LIVE SNAPSHOT</span>
+      <button class="btn btn-b" onclick="quoteAll()" style="font-size:9px">⟳ Refresh All</button>
+      <button class="btn btn-gold" onclick="toggleSummary()" style="font-size:9px;margin-left:auto">✕ Close</button>
+    </div>
+    <div class="sumgrid" id="sumgrid"></div>
+  </div>
+
+</div>
+
+<!-- Status bar -->
+<div class="sbar-foot">
+  <div class="sbi">API: <span id="sbApi">—</span></div>
+  <div class="sbi">Inst: <span id="sbInst">—</span></div>
+  <div class="sbi">Data: <span id="sbData">—</span></div>
+  <div class="sbt" id="sbTime">—</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const S = {
+  workerUrl:'', apiKey:'', apiSecret:'', accessToken:'',
+  instruments:[], instrMap:{}, expiries:[], farExpiries:[],
+  expiry:'', farExpiry:'',
+  cmp:24000, off:{o1:200,o2:400,o3:600,o4:800,o6:1200},
+  tf:'day', from:'', to:'',
+  page:0, sumOpen:false,
+  charts:{},    // spId → {prem,pnl,cs,el,dl,tl,xl,ps,zl}
+  data:{},      // spId → ohlc[]
+  liveQ:{},     // spId → {net,legs,ts}
+  dirs:{},      // spId → 'bull'|'bear'
+  autoTimer:null, autoTick:null, autoRunning:false, countdown:0,
+};
+const $ = id => document.getElementById(id);
+const snap25 = x => Math.round(x/25)*25;
+const snap50 = x => Math.round(x/50)*50;
+
+// ═══════════════════════════════════════════════════════════════
+// SPREAD DEFINITIONS  (all 19 spreads, 10 pages, 2 per page)
+// ═══════════════════════════════════════════════════════════════
+const SP = [
+  // PAGE 0 — L0 hedges
+  {id:'s00',pg:0,name:'L0 — TAIL HEDGE',       lay:'l0',type:'credit',
+   desc:'Always-On · BP 2x @−off4 · SP 1x @−off6',dir:false,
+   legs:(c,o)=>[{t:'PE',k:snap25(c-o.o4),q:2,a:'S',lb:'BP 2x −off4'},
+                {t:'PE',k:snap25(c-o.o6),q:1,a:'B',lb:'SP 1x −off6'}]},
+  {id:'s01',pg:0,name:'L0B — RALLY HEDGE',      lay:'l0',type:'credit',
+   desc:'Always-On · BC 2x @+off4 · SC 1x @+off6',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c+o.o4),q:2,a:'B',lb:'BC 2x +off4'},
+                {t:'CE',k:snap25(c+o.o6),q:1,a:'S',lb:'SC 1x +off6'}]},
+  // PAGE 1 — L1A
+  {id:'s10',pg:1,name:'JRF — JADE RATIO FLY',   lay:'l1',type:'credit',
+   desc:'VA · 4 shorts ATM±0.5A · Wings ±2.5A · R:R 44:1',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c),        q:1,a:'S',lb:'SC1 ATM'},
+                {t:'CE',k:snap25(c+o.o1*.5),q:1,a:'S',lb:'SC2 +0.5A'},
+                {t:'PE',k:snap25(c),        q:1,a:'S',lb:'SP1 ATM'},
+                {t:'PE',k:snap25(c-o.o1*.5),q:1,a:'S',lb:'SP2 −0.5A'},
+                {t:'CE',k:snap25(c+o.o1*2.5),q:1,a:'B',lb:'BC +2.5A'},
+                {t:'PE',k:snap25(c-o.o1*2.5),q:1,a:'B',lb:'BP −2.5A'}]},
+  {id:'s11',pg:1,name:'IC — IRON CONDOR',        lay:'l1',type:'credit',
+   desc:'VA · Δ0.16 sym · SC/SP @±off2 · Wings @±2×off2',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c+o.o2),  q:1,a:'S',lb:'SC +off2'},
+                {t:'CE',k:snap25(c+o.o2*2),q:1,a:'B',lb:'BC +2×off2'},
+                {t:'PE',k:snap25(c-o.o2),  q:1,a:'S',lb:'SP −off2'},
+                {t:'PE',k:snap25(c-o.o2*2),q:1,a:'B',lb:'BP −2×off2'}]},
+  // PAGE 2 — L1B/C
+  {id:'s20',pg:2,name:'DOUBLE CALENDAR',         lay:'l1',type:'debit',
+   desc:'VA · Low-vol · ATM call+put calendar · Near sell / Far buy',
+   note:'Near legs → main Expiry · Far legs → Far Expiry',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c),q:1,a:'S',lb:'Near SC ATM'},
+                {t:'CE',k:snap25(c),q:1,a:'B',lb:'Far  BC ATM',far:true},
+                {t:'PE',k:snap25(c),q:1,a:'S',lb:'Near SP ATM'},
+                {t:'PE',k:snap25(c),q:1,a:'B',lb:'Far  BP ATM',far:true}]},
+  {id:'s21',pg:2,name:'IBF — IRON BUTTERFLY',    lay:'l1',type:'credit',
+   desc:'VA · Pin mode · HVP<30 · ATM straddle sell · Wings ±off2 · TP 25%',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c),    q:1,a:'S',lb:'SC ATM'},
+                {t:'PE',k:snap25(c),    q:1,a:'S',lb:'SP ATM'},
+                {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'},
+                {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'}]},
+  // PAGE 3 — Stacked IC + DRL
+  {id:'s30',pg:3,name:'STACKED IC',              lay:'l1',type:'credit',
+   desc:'Add when first IC hits 50% profit · SC/SP @±off2 · Wings @±off3',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC +off2'},
+                {t:'CE',k:snap25(c+o.o3),q:1,a:'B',lb:'BC +off3'},
+                {t:'PE',k:snap25(c-o.o2),q:1,a:'S',lb:'SP −off2'},
+                {t:'PE',k:snap25(c-o.o3),q:1,a:'B',lb:'BP −off3'}]},
+  {id:'s31',pg:3,name:'DRL — DBL RATIO LIZARD',  lay:'l2',type:'credit',
+   desc:'REJ · SC(1-2x)@ATM + SP(1-2x)@±0.5A · R:R 199:1',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'PE',k:snap25(c),         q:1,a:'S',lb:'SP ATM'},
+     {t:'CE',k:snap25(c+o.o1*.5),q:1,a:'S',lb:'SC +0.5A'},
+     {t:'PE',k:snap25(c-o.o2),   q:1,a:'B',lb:'BP −off2'},
+     {t:'CE',k:snap25(c+o.o1*2.5),q:1,a:'B',lb:'BC +2.5A'}]:[
+     {t:'CE',k:snap25(c),         q:1,a:'S',lb:'SC ATM'},
+     {t:'PE',k:snap25(c-o.o1*.5),q:1,a:'S',lb:'SP −0.5A'},
+     {t:'CE',k:snap25(c+o.o2),   q:1,a:'B',lb:'BC +off2'},
+     {t:'PE',k:snap25(c-o.o1*2.5),q:1,a:'B',lb:'BP −2.5A'}]},
+  // PAGE 4 — Fat Lizard + Jade Lizard
+  {id:'s40',pg:4,name:'FAT LIZARD (2x RATIO)',   lay:'l2',type:'credit',
+   desc:'REJ · Strong + HVP>50 · Bear: 2x SC · Bull: 2x SP · TP 55%',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
+     {t:'PE',k:snap25(c),     q:2,a:'S',lb:'SP 2x ATM'},
+     {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'}]:[
+     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
+     {t:'CE',k:snap25(c),     q:2,a:'S',lb:'SC 2x ATM'},
+     {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'}]},
+  {id:'s41',pg:4,name:'JADE LIZARD / REV JADE',  lay:'l2',type:'credit',
+   desc:'REJ · Bear=Jade Liz · Bull=Rev Jade · Zero one-side risk',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
+     {t:'PE',k:snap25(c),     q:1,a:'S',lb:'SP ATM'},
+     {t:'PE',k:snap25(c-o.o1),q:1,a:'B',lb:'BP −off1'}]:[
+     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
+     {t:'CE',k:snap25(c),     q:1,a:'S',lb:'SC ATM'},
+     {t:'CE',k:snap25(c+o.o1),q:1,a:'B',lb:'BC +off1'}]},
+  // PAGE 5 — L3 JRC + Monitor
+  {id:'s50',pg:5,name:'JRC — JADE REV CONDOR',   lay:'l3',type:'credit',
+   desc:'Between VA+REJ · Reverting · 4 shorts + wings · R:R 46:1',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'PE',k:snap25(c),           q:1,a:'S',lb:'SP ATM'},
+     {t:'PE',k:snap25(c-o.o1*.5),  q:1,a:'S',lb:'SP2 −0.5A'},
+     {t:'CE',k:snap25(c+o.o1*.5),  q:1,a:'S',lb:'SC +0.5A'},
+     {t:'CE',k:snap25(c+o.o1*1.5), q:1,a:'S',lb:'SC2 +1.5A'},
+     {t:'PE',k:snap25(c-o.o1*1.5), q:1,a:'B',lb:'BP −1.5A'},
+     {t:'CE',k:snap25(c+o.o1*2.5), q:1,a:'B',lb:'BC +2.5A'}]:[
+     {t:'CE',k:snap25(c),           q:1,a:'S',lb:'SC ATM'},
+     {t:'CE',k:snap25(c+o.o1*.5),  q:1,a:'S',lb:'SC2 +0.5A'},
+     {t:'PE',k:snap25(c-o.o1*.5),  q:1,a:'S',lb:'SP −0.5A'},
+     {t:'PE',k:snap25(c-o.o1*1.5), q:1,a:'S',lb:'SP2 −1.5A'},
+     {t:'CE',k:snap25(c+o.o1*1.5), q:1,a:'B',lb:'BC +1.5A'},
+     {t:'PE',k:snap25(c-o.o1*2.5), q:1,a:'B',lb:'BP −2.5A'}]},
+  {id:'s51',pg:5,name:'MONITOR IC',              lay:'l3',type:'credit',
+   desc:'Between VA+REJ · Companion to JRC · Bull=Jade · Bear=RevJade · R:R 334:1',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
+     {t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC +off2'},
+     {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'},
+     {t:'CE',k:snap25(c+o.o3),q:1,a:'B',lb:'BC +off3'}]:[
+     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
+     {t:'PE',k:snap25(c-o.o2),q:1,a:'S',lb:'SP −off2'},
+     {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'},
+     {t:'PE',k:snap25(c-o.o3),q:1,a:'B',lb:'BP −off3'}]},
+  // PAGE 6 — L4 JTC + TRAT
+  {id:'s60',pg:6,name:'JTC — JADE TREND CONDOR', lay:'l4',type:'credit',
+   desc:'Between VA+REJ · Trending · 4 shorts asymm · R:R 334:1',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'CE',k:snap25(c+o.o1*2.5),q:1,a:'S',lb:'SC +2.5A'},
+     {t:'CE',k:snap25(c+o.o1*.5), q:1,a:'S',lb:'SC2 +0.5A'},
+     {t:'PE',k:snap25(c),          q:1,a:'S',lb:'SP ATM'},
+     {t:'PE',k:snap25(c-o.o1),     q:1,a:'S',lb:'SP2 −off1'},
+     {t:'CE',k:snap25(c+o.o1*3.5),q:1,a:'B',lb:'BC +3.5A'},
+     {t:'PE',k:snap25(c-o.o1*2),   q:1,a:'B',lb:'BP −2A'}]:[
+     {t:'PE',k:snap25(c-o.o1*2.5),q:1,a:'S',lb:'SP −2.5A'},
+     {t:'PE',k:snap25(c-o.o1*.5), q:1,a:'S',lb:'SP2 −0.5A'},
+     {t:'CE',k:snap25(c),          q:1,a:'S',lb:'SC ATM'},
+     {t:'CE',k:snap25(c+o.o1),     q:1,a:'S',lb:'SC2 +off1'},
+     {t:'PE',k:snap25(c-o.o1*3.5),q:1,a:'B',lb:'BP −3.5A'},
+     {t:'CE',k:snap25(c+o.o1*2),   q:1,a:'B',lb:'BC +2A'}]},
+  {id:'s61',pg:6,name:'TRAT — TREND RATIO',      lay:'l4',type:'credit',
+   desc:'Trending · HVP>50 · 2x ratio · ⚠ HALF SIZE mandatory',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'CE',k:snap25(c+o.o1*1.5),q:2,a:'S',lb:'SC 2x +1.5A'},
+     {t:'PE',k:snap25(c),          q:1,a:'S',lb:'SP ATM'},
+     {t:'PE',k:snap25(c-o.o1*.5), q:1,a:'S',lb:'SP2 −0.5A'},
+     {t:'CE',k:snap25(c+o.o3),     q:1,a:'B',lb:'BC +off3'},
+     {t:'PE',k:snap25(c-o.o2),     q:1,a:'B',lb:'BP −off2'}]:[
+     {t:'PE',k:snap25(c-o.o1*1.5),q:2,a:'S',lb:'SP 2x −1.5A'},
+     {t:'CE',k:snap25(c),          q:1,a:'S',lb:'SC ATM'},
+     {t:'CE',k:snap25(c+o.o1*.5), q:1,a:'S',lb:'SC2 +0.5A'},
+     {t:'PE',k:snap25(c-o.o3),     q:1,a:'B',lb:'BP −off3'},
+     {t:'CE',k:snap25(c+o.o2),     q:1,a:'B',lb:'BC +off2'}]},
+  // PAGE 7 — Tortoises
+  {id:'s70',pg:7,name:'GF TORTOISE (RevJade)',    lay:'tor',type:'credit',
+   desc:'Band 9/10 · HMA↓cross+SMI OB · SC+1 BC+2 SP−2 BP−3 + Journey SC(far)',
+   note:'Main 4 legs → primary Expiry · Journey SC → Far Expiry (90d)',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
+                {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'},
+                {t:'PE',k:snap25(c-o.o2),q:1,a:'S',lb:'SP −off2'},
+                {t:'PE',k:snap25(c-o.o3),q:1,a:'B',lb:'BP −off3'},
+                {t:'CE',k:snap25(c),     q:1,a:'S',lb:'Journey SC ATM',far:true}]},
+  {id:'s71',pg:7,name:'GM TORTOISE (Jade)',       lay:'tor',type:'credit',
+   desc:'Band 1/2 · HMA↑cross+SMI OS · SP−1 BP−2 SC+2 BC+3 + Journey SP(far)',
+   note:'Main 4 legs → primary Expiry · Journey SP → Far Expiry (90d)',dir:false,
+   legs:(c,o)=>[{t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
+                {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'},
+                {t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC +off2'},
+                {t:'CE',k:snap25(c+o.o3),q:1,a:'B',lb:'BC +off3'},
+                {t:'PE',k:snap25(c),     q:1,a:'S',lb:'Journey SP ATM',far:true}]},
+  // PAGE 8 — Cobra + Batman
+  {id:'s80',pg:8,name:'KING COBRA',               lay:'spl',type:'credit',
+   desc:'VA · HVP<35 · ATM straddle + wings ±off2 · 0.5x · Pin mode',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c),    q:1,a:'S',lb:'SC ATM'},
+                {t:'PE',k:snap25(c),    q:1,a:'S',lb:'SP ATM'},
+                {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'},
+                {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'}]},
+  {id:'s81',pg:8,name:'RATIO BATMAN (Dual BWB)',  lay:'spl',type:'credit',
+   desc:'Conflict zone · HVP 35-65 · Bull-BWB + Bear-BWB · 0.5x · First move wins',dir:false,
+   legs:(c,o)=>[{t:'CE',k:snap25(c),        q:1,a:'B',lb:'Bull BC1 ATM'},
+                {t:'CE',k:snap25(c+o.o1),   q:2,a:'S',lb:'Bull SC 2x +off1'},
+                {t:'CE',k:snap25(c+o.o2),   q:1,a:'B',lb:'Bull BC2 +off2'},
+                {t:'PE',k:snap25(c),        q:1,a:'B',lb:'Bear BP1 ATM'},
+                {t:'PE',k:snap25(c-o.o1),   q:2,a:'S',lb:'Bear SP 2x −off1'},
+                {t:'PE',k:snap25(c-o.o2),   q:1,a:'B',lb:'Bear BP2 −off2'}]},
+  // PAGE 9 — Python/Boa
+  {id:'s90',pg:9,name:'PYTHON/BOA (Backspread)',  lay:'spl',type:'debit',
+   desc:'HVP>60 · Outside VA · Long gamma · Bull=Call BS · Bear=Put BS',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
+     {t:'CE',k:snap25(c+o.o2),q:2,a:'B',lb:'BC 2x +off2'}]:[
+     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
+     {t:'PE',k:snap25(c-o.o2),q:2,a:'B',lb:'BP 2x −off2'}]},
+  {id:'s91',pg:9,name:'PYTHON + INCOME LEG',      lay:'spl',type:'mixed',
+   desc:'HVP>60 · Backspread + income leg · 3-scenario · DTE 21-35',dir:true,
+   legs:(c,o,d)=>d==='bull'?[
+     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
+     {t:'CE',k:snap25(c+o.o2),q:2,a:'B',lb:'BC 2x +off2'},
+     {t:'PE',k:snap25(c-o.o2),q:1,a:'S',lb:'SP income −off2'}]:[
+     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
+     {t:'PE',k:snap25(c-o.o2),q:2,a:'B',lb:'BP 2x −off2'},
+     {t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC income +off2'}]},
+];
+
+const NPAGES=10;
+const PNAMES=['L0 Hedges','L1A JRF+IC','L1B/C Cal+IBF','L1A+L2 DRL',
+              'L2 FL+JL','L3 JRC+Mon','L4 JTC+TRAT','Tortoises','Cobra+Bat','Python/Boa'];
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH / TOKEN
+// ═══════════════════════════════════════════════════════════════
+function showAuth(){$('authWrap').style.display='flex'}
+function hideAuth(){$('authWrap').style.display='none'}
+
+async function sha256hex(str){
+  const buf=new TextEncoder().encode(str);
+  const h=await crypto.subtle.digest('SHA-256',buf);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function openKiteLogin(){
+  const key=$('a_key').value.trim();
+  if(!key){amsg('Enter API Key first','err');return}
+  const wk=$('a_worker').value.trim().replace(/\/$/,'');
+  if(!wk){amsg('Enter Worker URL first','err');return}
+  const cb=encodeURIComponent(wk+'/callback');
+  window.open(`https://kite.zerodha.com/connect/login?api_key=${key}&v=3`,'_blank');
+  amsg('Login to Zerodha → copy Request Token from callback page → paste below','inf');
+}
+
+async function exchangeToken(){
+  const wk=$('a_worker').value.trim().replace(/\/$/,'');
+  const key=$('a_key').value.trim();
+  const sec=$('a_sec').value.trim();
+  const rt=$('a_rt').value.trim();
+  if(!wk||!key||!sec||!rt){amsg('Fill all fields + request token','err');return}
+  amsg('Computing checksum and exchanging token…','inf');
+  try{
+    const checksum=await sha256hex(key+rt+sec);
+    const body=`api_key=${key}&request_token=${rt}&checksum=${checksum}`;
+    const r=await fetch(wk+'/kite/session/token',{
+      method:'POST',
+      headers:{'X-Kite-Version':'3','Content-Type':'application/x-www-form-urlencoded'},
+      body
+    });
+    const d=await r.json();
+    if(!d.data?.access_token)throw new Error(d.message||JSON.stringify(d));
+    const tok=d.data.access_token;
+    S.workerUrl=wk; S.apiKey=key; S.apiSecret=sec; S.accessToken=tok;
+    const todayIST=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+    localStorage.setItem('jade',JSON.stringify({wk,key,sec,tok,date:todayIST}));
+    const tb=$('tokenBox');
+    tb.textContent='ACCESS TOKEN: '+tok.slice(0,16)+'…  (tap to copy)';
+    tb.style.display='block';
+    $('btnLaunch').style.display='block';
+    amsg('✓ Access token generated. Ready to launch!','ok');
+  }catch(e){amsg('Error: '+e.message,'err')}
+}
+
+function copyToken(){
+  navigator.clipboard?.writeText(S.accessToken);
+  $('tokenBox').textContent='✓ Copied!';
+  setTimeout(()=>{$('tokenBox').textContent='ACCESS TOKEN: '+S.accessToken.slice(0,16)+'… (tap to copy)'},1500);
+}
+
+function amsg(m,t){const e=$('authMsg');e.textContent=m;e.className='amsg '+t}
+
+// ═══════════════════════════════════════════════════════════════
+// KITE API WRAPPER
+// ═══════════════════════════════════════════════════════════════
+async function kite(path,params={}){
+  const qs=new URLSearchParams(params).toString();
+  const url=`${S.workerUrl}/kite/${path}${qs?'?'+qs:''}`;
+  const r=await fetch(url,{headers:{
+    'Authorization':`token ${S.apiKey}:${S.accessToken}`,
+    'X-Kite-Version':'3'
+  }});
+  if(!r.ok){const t=await r.text();throw new Error(r.status+': '+t.slice(0,200))}
+  return r.json();
+}
+
+async function kitePost(path,body){
+  const r=await fetch(`${S.workerUrl}/kite/${path}`,{
+    method:'POST',
+    headers:{
+      'Authorization':`token ${S.apiKey}:${S.accessToken}`,
+      'X-Kite-Version':'3',
+      'Content-Type':'application/x-www-form-urlencoded'
+    },
+    body
+  });
+  if(!r.ok){const t=await r.text();throw new Error(r.status+': '+t.slice(0,200))}
+  return r.json();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INSTRUMENTS
+// ═══════════════════════════════════════════════════════════════
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  const hdrs=lines[0].split(',').map(h=>h.trim());
+  return lines.slice(1).map(l=>{
+    const v=l.split(',');
+    const o={};hdrs.forEach((h,i)=>o[h]=(v[i]||'').trim());
+    return o;
+  });
+}
+
+async function loadInstruments(){
+  setSb('sbApi','Loading…','warn');
+  try{
+    const r=await fetch(`${S.workerUrl}/kite/instruments/NFO`,{
+      headers:{'Authorization':`token ${S.apiKey}:${S.accessToken}`,'X-Kite-Version':'3'}
+    });
+    const text=await r.text();
+    const all=parseCSV(text);
+    const nifty=all.filter(i=>i.name==='NIFTY'&&(i.instrument_type==='CE'||i.instrument_type==='PE'));
+    S.instruments=nifty;
+    S.instrMap={};
+    const exSet=new Set();
+    nifty.forEach(i=>{
+      const k=`NIFTY_${i.instrument_type}_${Math.round(parseFloat(i.strike))}_${i.expiry}`;
+      S.instrMap[k]={token:i.instrument_token,sym:i.tradingsymbol,lot:parseInt(i.lot_size)||25};
+      exSet.add(i.expiry);
+    });
+    S.expiries=[...exSet].sort();
+    const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+    const nxt=S.expiries.find(e=>e>=today)||S.expiries[0];
+    const far=S.expiries.find(e=>e>nxt)||S.expiries[1]||nxt;
+    ['sel_exp','sel_far'].forEach((id,i)=>{
+      const arr=S.expiries, def=i===0?nxt:far;
+      $(id).innerHTML=arr.map(e=>`<option value="${e}"${e===def?' selected':''}>${e}</option>`).join('');
+    });
+    S.expiry=nxt; S.farExpiry=far;
+    $('hExp').textContent=nxt.slice(5);
+    $('hDte').textContent=calcDTE(nxt)+'d';
+    setSb('sbApi','✓ Connected','ok');
+    setSb('sbInst',nifty.length+' opts');
+    set50dte();
+    return true;
+  }catch(e){
+    setSb('sbApi','Error','err');
+    console.error(e);
+    return false;
+  }
+}
+
+function getToken(type,strike,expiry){
+  const k=`NIFTY_${type}_${Math.round(strike)}_${expiry}`;
+  return S.instrMap[k]||null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HISTORICAL DATA
+// ═══════════════════════════════════════════════════════════════
+const histCache={};
+
+function kiteTs(ts){
+  // "2024-01-15T09:15:00+0530" or "2024-01-15"
+  return Math.floor(new Date(ts).getTime()/1000);
+}
+
+async function fetchHist(token,interval,from,to){
+  const k=`${token}_${interval}_${from}_${to}`;
+  if(histCache[k])return histCache[k];
+  try{
+    const d=await kite(`instruments/historical/${token}/${interval}`,{
+      from:from+' 09:00:00',to:to+' 15:35:00',continuous:0,oi:1
+    });
+    const candles=d?.data?.candles||[];
+    histCache[k]=candles;
+    return candles;
+  }catch(e){console.warn('hist fail',token,e.message);return[]}
+}
+
+function combineOHLC(legCandles,signs){
+  const tsMap=new Map();
+  for(let i=0;i<legCandles.length;i++){
+    legCandles[i].forEach(c=>{
+      const ts=kiteTs(c[0]);
+      if(!tsMap.has(ts))tsMap.set(ts,new Array(legCandles.length).fill(null));
+      tsMap.get(ts)[i]=c;
+    });
+  }
+  const out=[];
+  const sorted=[...tsMap.entries()].sort((a,b)=>a[0]-b[0]);
+  for(const [ts,bars]of sorted){
+    if(bars.some(b=>!b))continue;
+    let o=0,h=0,l=0,c=0;
+    for(let i=0;i<bars.length;i++){
+      const[,bo,bh,bl,bc]=bars[i];
+      const s=signs[i];
+      o+=bo*s; c+=bc*s;
+      h+=s>0?bh*s:bl*Math.abs(s);
+      l+=s>0?bl*s:bh*Math.abs(s);
+    }
+    out.push({time:ts,open:Math.round(o*10)/10,high:Math.round(h*10)/10,
+              low:Math.round(l*10)/10,close:Math.round(c*10)/10});
+  }
+  return out;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LAUNCH
+// ═══════════════════════════════════════════════════════════════
+async function launch(){
+  hideAuth();
+  $('mainApp').style.display='flex';
+  buildNav();
+  const ok=await loadInstruments();
+  if(ok){
+    onCmp();onOff();
+    goPage(0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONFIG HANDLERS
+// ═══════════════════════════════════════════════════════════════
+function getOff(){
+  return{
+    o1:parseFloat($('inp_o1').value)||200,
+    o2:parseFloat($('inp_o2').value)||400,
+    o3:parseFloat($('inp_o3').value)||600,
+    o4:parseFloat($('inp_o4').value)||800,
+    o6:parseFloat($('inp_o6').value)||1200,
+  };
+}
+function onCmp(){S.cmp=parseFloat($('inp_cmp').value)||24000;$('hCmp').textContent=S.cmp.toFixed(0)}
+function onOff(){S.off=getOff();$('hA1').textContent=S.off.o1}
+function onTf(){S.tf=$('sel_tf').value}
+function onExpiry(){
+  S.expiry=$('sel_exp').value;
+  S.farExpiry=$('sel_far').value;
+  $('hExp').textContent=S.expiry.slice(5);
+  $('hDte').textContent=calcDTE(S.expiry)+'d';
+  set50dte();
+}
+function set50dte(){
+  const exp=S.expiry||$('sel_exp').value;
+  if(!exp)return;
+  const expDt=new Date(exp+'T00:00:00+05:30');
+  const from=new Date(expDt); from.setDate(from.getDate()-50);
+  const to=new Date(Math.min(expDt,new Date()));
+  $('inp_from').value=from.toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+  $('inp_to').value=to.toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+  S.from=$('inp_from').value; S.to=$('inp_to').value;
+}
+
+function calcDTE(expiry){
+  if(!expiry)return null;
+  const exp=new Date(expiry+'T15:30:00+05:30');
+  return Math.max(0,Math.round((exp-Date.now())/(864e5)));
+}
+function dteBadge(expiry){
+  const d=calcDTE(expiry);
+  if(d===null)return'';
+  const cls=d>21?'ok':d>7?'w':'x';
+  return`<span class="bdg bdg-dte-${cls}">⏱ ${d}d</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE NAV
+// ═══════════════════════════════════════════════════════════════
+function buildNav(){
+  $('pills').innerHTML=PNAMES.map((n,i)=>
+    `<div class="pill" id="pill${i}" onclick="goPage(${i})">${n}</div>`
+  ).join('');
+}
+function chgPage(d){goPage(Math.max(0,Math.min(NPAGES-1,S.page+d)))}
+function goPage(p){
+  S.page=p;
+  $('pgLabel').textContent=`${p+1}/${NPAGES}`;
+  document.querySelectorAll('.pill').forEach((el,i)=>el.classList.toggle('on',i===p));
+  renderPage();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER PAGE
+// ═══════════════════════════════════════════════════════════════
+function renderPage(){
+  // hide summary
+  if(S.sumOpen){S.sumOpen=false;$('summaryWrap').style.display='none';$('spreadsWrap').style.display='block'}
+
+  // destroy old charts
+  Object.values(S.charts).forEach(ch=>{try{ch.prem.remove();ch.pnl.remove()}catch(_){}});
+  S.charts={};
+
+  const spreads=SP.filter(s=>s.pg===S.page);
+  const grid=$('sgrid');
+  grid.innerHTML='';
+  spreads.forEach(sp=>grid.appendChild(buildCard(sp)));
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    spreads.forEach(sp=>{
+      initChart(sp);
+      // auto-load if dates ready
+      const expiry=$('sel_exp').value;
+      const from=$('inp_from').value;
+      const to=$('inp_to').value;
+      if(expiry&&from&&to) loadData(sp.id);
+    });
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUILD CARD
+// ═══════════════════════════════════════════════════════════════
+function buildCard(sp){
+  const dir=S.dirs[sp.id]||'bear';
+  const cmp=S.cmp, o=getOff();
+  const legs=sp.legs(cmp,o,dir);
+
+  const tl=sp.type==='credit'?'CREDIT':sp.type==='debit'?'DEBIT':'MIXED';
+  const tb=sp.type==='credit'?'bdg-cr':sp.type==='debit'?'bdg-dr':'bdg-mx';
+
+  // inline legs string for header
+  const legStr=legs.map(l=>
+    `<span style="color:${l.a==='S'?'var(--bear)':'var(--bull)'}">${l.a==='S'?'▼':'▲'}${l.t}${l.k}</span>`
+  ).join(' ');
+
+  // legs table rows
+  const legsHTML=legs.map((leg,i)=>{
+    const farLabel=leg.far?'<span style="color:var(--warn);font-size:8px">[FAR]</span>':'';
+    return`<tr>
+      <td class="${leg.a==='S'?'sell':'buy'}">${leg.a==='S'?'▼ SL':'▲ BY'}</td>
+      <td>${leg.t}</td>
+      <td><input class="sinp" type="number" step="25" id="str_${sp.id}_${i}" value="${leg.k}" onchange="clearCache('${sp.id}')"></td>
+      <td>${leg.q}×</td>
+      <td style="color:var(--dim);font-size:8.5px">${leg.lb} ${farLabel}</td>
+    </tr>`;
+  }).join('');
+
+  const noteHTML=sp.note?`<div class="card-note">⚠ ${sp.note}</div>`:'';
+
+  const dirHTML=sp.dir?`
+    <button class="dirbtn ${dir==='bull'?'bull-on':''}" onclick="setDir('${sp.id}','bull')" style="font-size:8px">▲</button>
+    <button class="dirbtn ${dir==='bear'?'bear-on':''}" onclick="setDir('${sp.id}','bear')" style="font-size:8px">▼</button>`:'';
+
+  const el=document.createElement('div');
+  el.className=`card ${sp.lay}`;
+  el.id=`card_${sp.id}`;
+  el.innerHTML=`
+    <div class="ctop">
+      <div style="min-width:0;flex:1">
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span class="cname">${sp.name}</span>
+          <span class="bdg bdg-lay">${sp.lay.toUpperCase()}</span>
+          <span class="bdg ${tb}">${tl}</span>
+          ${dteBadge($('sel_exp')?.value)}
+        </div>
+        <div class="clegs" style="margin-top:3px">${legStr}</div>
+      </div>
+      <div class="cbtns">
+        ${dirHTML}
+        <button class="cload" onclick="loadData('${sp.id}')">↻</button>
+      </div>
+    </div>
+    ${noteHTML}
+
+    <!-- STATS BAR -->
+    <div class="sbar" id="sbar_${sp.id}">
+      <div class="sc"><div class="sv hi" id="sv_en_${sp.id}">—</div><div class="sl">Entry</div></div>
+      <div class="sc"><div class="sv live" id="sv_lv_${sp.id}">—</div><div class="sl">Live Net</div></div>
+      <div class="sc"><div class="sv neu" id="sv_pl_${sp.id}">—</div><div class="sl">P&amp;L pts</div></div>
+      <div class="sc"><div class="sv neu" id="sv_dc_${sp.id}">—</div><div class="sl">Decayed</div></div>
+      <div class="sc"><div class="sv neu" id="sv_dt_${sp.id}">—</div><div class="sl">DTE left</div></div>
+    </div>
+
+    <!-- LIVE PANEL -->
+    <div class="lpanel" id="lp_${sp.id}">
+      <div class="lphdr">
+        <span class="lptitle">⚡ LIVE NET</span>
+        <span style="color:var(--dim);font-size:8px">⟳ QUOTE to refresh</span>
+        <span id="lpts_${sp.id}" style="color:var(--dim);font-size:8px;margin-left:auto"></span>
+      </div>
+      <div class="lpnet neu" id="lpnet_${sp.id}">— pts</div>
+    </div>
+
+    <!-- DECAY LEGEND -->
+    <div class="dleg">
+      <div class="dli"><div class="dlw" style="background:#22d46e"></div>Actual OHLC</div>
+      <div class="dli"><div class="dlw" style="background:var(--hi);border-top:1px dashed var(--hi)"></div>Entry</div>
+      <div class="dli"><div class="dlw" style="background:var(--blue)"></div>Theo decay</div>
+      <div class="dli"><div class="dlw" style="background:#22d46e;opacity:.4;border-top:1px dotted #22d46e"></div>TP 50%</div>
+      <div class="dli"><div class="dlw" style="background:var(--bear);border-top:1px dashed var(--bear)"></div>18-DTE exit</div>
+      <span id="dr_${sp.id}" style="margin-left:auto;color:var(--dim);font-size:8px;white-space:nowrap"></span>
+    </div>
+
+    <!-- PREMIUM CHART -->
+    <div class="clbl">
+      <div class="ldot"></div>
+      NET PREMIUM OHLC · 50DTE→EXPIRY/18DTE
+      <div class="clbl-right">
+        <span id="barcnt_${sp.id}" style="font-size:8px"></span>
+      </div>
+    </div>
+    <div class="cbox" id="cbox_${sp.id}">
+      <div id="cprem_${sp.id}">
+        <div class="cph"><div class="cph-ico">◈</div>
+          <p>Loading ${sp.name}…</p></div>
+      </div>
+    </div>
+
+    <!-- P&L CHART -->
+    <div class="clbl" style="border-top:1px solid var(--b1)">
+      P&amp;L — from entry
+      <div class="clbl-right">
+        <input class="einp" type="number" step="1" id="entry_${sp.id}"
+               placeholder="entry pts" onchange="onEntry('${sp.id}')">
+        <button class="ebtn" onclick="setEntryFirst('${sp.id}')">← 1st bar</button>
+        <span id="pnlv_${sp.id}" class="pnlv neu"></span>
+      </div>
+    </div>
+    <div class="pnlbox" id="cpnlbox_${sp.id}">
+      <div id="cpnl_${sp.id}"></div>
+    </div>
+
+    <!-- LEGS COLLAPSE -->
+    <div class="lhdr" onclick="toggleLegs('${sp.id}')">
+      <span>▸ STRIKE EDITOR &amp; LEGS</span>
+      <span id="li_${sp.id}">show</span>
+    </div>
+    <div class="lbody" id="lb_${sp.id}">
+      <table class="ltbl">
+        <thead><tr><th>Act</th><th>Type</th><th>Strike</th><th>Qty</th><th>Label</th></tr></thead>
+        <tbody>${legsHTML}</tbody>
+      </table>
+      <button class="btn btn-b" onclick="loadData('${sp.id}')" style="margin-top:6px;font-size:9px">↻ Reload</button>
+    </div>
+  `;
+  return el;
+}
+
+function toggleLegs(id){
+  const b=$(`lb_${id}`),i=$(`li_${id}`);
+  if(!b)return;
+  const open=b.style.display!=='none';
+  b.style.display=open?'none':'block';
+  i.textContent=open?'show':'hide';
+}
+
+function setDir(id,dir){
+  S.dirs[id]=dir;
+  delete S.data[id];
+  // rebuild card
+  const sp=SP.find(s=>s.id===id);
+  const old=$(`card_${id}`);
+  if(!sp||!old)return;
+  if(S.charts[id]){try{S.charts[id].prem.remove();S.charts[id].pnl.remove()}catch(_){}}
+  delete S.charts[id];
+  const newCard=buildCard(sp);
+  old.replaceWith(newCard);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    initChart(sp);
+    const expiry=$('sel_exp').value,from=$('inp_from').value,to=$('inp_to').value;
+    if(expiry&&from&&to)loadData(id);
+  }));
+}
+
+function clearCache(id){delete S.data[id];histCache[Symbol()]={}} // note: clears by new key, harmless
+
+// ═══════════════════════════════════════════════════════════════
+// CHART INIT
+// ═══════════════════════════════════════════════════════════════
+function mkChart(el,h){
+  el.innerHTML='';
+  el.style.height=h+'px';
+  return LightweightCharts.createChart(el,{
+    width:el.clientWidth||400,height:h,
+    layout:{background:{color:'#07090d'},textColor:'#3d5568',fontSize:10},
+    grid:{vertLines:{color:'#0c111a'},horzLines:{color:'#0c111a'}},
+    crosshair:{mode:LightweightCharts.CrosshairMode.Normal},
+    rightPriceScale:{borderColor:'#1a2a38',minimumWidth:52},
+    timeScale:{borderColor:'#1a2a38',timeVisible:true,secondsVisible:false,
+               tickMarkFormatter:(t)=>{
+                 const d=new Date(t*1000);
+                 return S.tf==='day'?
+                   `${d.getDate()}/${d.getMonth()+1}`:
+                   `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+               }},
+  });
+}
+
+function initChart(sp){
+  const pe=$(`cprem_${sp.id}`);
+  const qe=$(`cpnl_${sp.id}`);
+  if(!pe||!qe)return;
+  pe.innerHTML=''; qe.innerHTML='';
+
+  const PH=Math.max(260,Math.floor(window.innerHeight*.32));
+  const QH=Math.max(110,Math.floor(window.innerHeight*.13));
+
+  const prem=mkChart(pe,PH);
+  const pnl =mkChart(qe,QH);
+
+  const cs=prem.addCandlestickSeries({
+    upColor:'#22d46e',downColor:'#f04060',
+    borderUpColor:'#22d46e',borderDownColor:'#f04060',
+    wickUpColor:'#0b4a28',wickDownColor:'#5a1828',
+  });
+  const el=prem.addLineSeries({color:'#f0c040',lineWidth:1,
+    lineStyle:LightweightCharts.LineStyle.Dashed,
+    crosshairMarkerVisible:false,priceLineVisible:false,lastValueVisible:true,title:'Entry'});
+  const dl=prem.addLineSeries({color:'#2d9cdb',lineWidth:1,
+    crosshairMarkerVisible:false,priceLineVisible:false,lastValueVisible:false,title:'Theo'});
+  const tl=prem.addLineSeries({color:'rgba(34,212,110,.35)',lineWidth:1,
+    lineStyle:LightweightCharts.LineStyle.Dotted,
+    crosshairMarkerVisible:false,priceLineVisible:false,lastValueVisible:false,title:'TP50%'});
+  const xl=prem.addLineSeries({color:'rgba(240,64,96,.45)',lineWidth:1,
+    lineStyle:LightweightCharts.LineStyle.Dashed,
+    crosshairMarkerVisible:false,priceLineVisible:false,lastValueVisible:false});
+  const ps=pnl.addBaselineSeries({
+    baseValue:{type:'price',price:0},lineWidth:2,
+    topLineColor:'#22d46e',topFillColor1:'rgba(34,212,110,.28)',topFillColor2:'rgba(34,212,110,.04)',
+    bottomLineColor:'#f04060',bottomFillColor1:'rgba(240,64,96,.28)',bottomFillColor2:'rgba(240,64,96,.04)',
+  });
+  const zl=pnl.addLineSeries({color:'rgba(255,255,255,.08)',lineWidth:1,
+    lineStyle:LightweightCharts.LineStyle.Dotted,
+    crosshairMarkerVisible:false,priceLineVisible:false,lastValueVisible:false});
+
+  S.charts[sp.id]={prem,pnl,cs,el,dl,tl,xl,ps,zl};
+
+  const ro=new ResizeObserver(entries=>{
+    for(const e of entries){
+      const w=e.contentRect.width;
+      const h1=Math.max(260,Math.floor(window.innerHeight*.32));
+      const h2=Math.max(110,Math.floor(window.innerHeight*.13));
+      try{prem.resize(w,h1);pnl.resize(w,h2)}catch(_){}
+    }
+  });
+  const box=$(`cbox_${sp.id}`);
+  if(box)ro.observe(box);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════════════════════
+async function loadData(spId){
+  const sp=SP.find(s=>s.id===spId);
+  if(!sp)return;
+  const dir=S.dirs[spId]||'bear';
+  const cmp=S.cmp, o=getOff();
+  const legs=sp.legs(cmp,o,dir);
+  const expiry=$('sel_exp').value;
+  const farExp=$('sel_far').value;
+  const interval=$('sel_tf').value;
+  const from=$('inp_from').value;
+  const to=$('inp_to').value;
+  if(!expiry||!from||!to){showErr(spId,'⚠ Set expiry and date range first');return}
+
+  showVeil(spId,true);
+  setSb('sbData',`Loading ${sp.name}…`);
+
+  try{
+    const toks=[]; const signs=[]; const miss=[];
+    for(let i=0;i<legs.length;i++){
+      const leg=legs[i];
+      const useExp=leg.far?farExp:expiry;
+      const inpEl=$(`str_${spId}_${i}`);
+      const strike=inpEl?parseFloat(inpEl.value)||leg.k:leg.k;
+      const instr=getToken(leg.t,strike,useExp);
+      if(!instr){miss.push(`${leg.t} ${strike} (${useExp})`);continue}
+      toks.push(instr.token);
+      signs.push((leg.a==='S'?1:-1)*leg.q);
+    }
+
+    if(!toks.length){
+      showErr(spId,`⚠ No strikes found:\n${miss.join(', ')}\nAdjust CMP / offsets to match listed strikes.`);
+      showVeil(spId,false);return;
+    }
+
+    // fetch with small delay to avoid rate limits
+    const candles=[];
+    for(const tok of toks){
+      const c=await fetchHist(tok,interval,from,to);
+      candles.push(c);
+      await new Promise(r=>setTimeout(r,120));
+    }
+
+    if(candles.every(c=>c.length===0)){
+      showErr(spId,'⚠ No data returned.\nCheck: date range, expiry, timeframe.\nIntraday: Kite only provides ~60 days.');
+      showVeil(spId,false);return;
+    }
+
+    const ohlc=combineOHLC(candles,signs);
+    if(!ohlc.length){
+      showErr(spId,'⚠ Could not align timestamps across legs.\nTry Daily timeframe.');
+      showVeil(spId,false);return;
+    }
+
+    S.data[spId]=ohlc;
+    const ch=S.charts[spId];
+    if(!ch){showVeil(spId,false);return}
+
+    ch.cs.setData(ohlc);
+    ch.prem.timeScale().fitContent();
+
+    // auto-set entry to first bar close
+    const entEl=$(`entry_${spId}`);
+    if(entEl&&(!entEl.value||entEl.value==='0')){
+      entEl.value=ohlc[0].close.toFixed(1);
+    }
+
+    // data range label
+    const d1=new Date(ohlc[0].time*1000).toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short'});
+    const d2=new Date(ohlc[ohlc.length-1].time*1000).toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short'});
+    const drEl=$(`dr_${spId}`);
+    if(drEl)drEl.textContent=`${d1}→${d2} (${ohlc.length} bars)`;
+    const bcEl=$(`barcnt_${spId}`);
+    if(bcEl)bcEl.textContent=ohlc.length+' bars';
+
+    renderOverlays(spId);
+    setSb('sbData',`${sp.name}: ${ohlc.length} bars`,'ok');
+    if(miss.length){
+      const n=$(`card_${spId}`)?.querySelector('.card-note');
+      if(n)n.textContent=`⚠ Missing: ${miss.join(', ')} — omitted`;
+    }
+  }catch(e){
+    showErr(spId,'Error: '+e.message);
+    setSb('sbData','Load error','err');
+  }
+  showVeil(spId,false);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OVERLAYS (entry line, decay, TP50, 18-DTE marker, P&L)
+// ═══════════════════════════════════════════════════════════════
+function renderOverlays(spId){
+  const sp=SP.find(s=>s.id===spId);
+  const ch=S.charts[spId];
+  const ohlc=S.data[spId];
+  if(!ch||!ohlc||!ohlc.length)return;
+
+  const entryVal=parseFloat($(`entry_${spId}`)?.value);
+  if(isNaN(entryVal))return;
+
+  const expiry=$('sel_exp').value||'';
+
+  // Entry flat line
+  ch.el.setData(ohlc.map(c=>({time:c.time,value:entryVal})));
+
+  // Theoretical sqrt-time decay
+  const expTs=expiry?new Date(expiry+'T15:30:00+05:30').getTime()/1000:null;
+  const entTs=ohlc[0].time;
+  if(expTs){
+    const totalSec=Math.max(expTs-entTs,1);
+    const theo=ohlc.map(c=>{
+      const rem=Math.max(expTs-c.time,0);
+      const fracLeft=rem/totalSec;
+      return{time:c.time,value:Math.round(entryVal*Math.sqrt(fracLeft)*10)/10};
+    });
+    ch.dl.setData(theo);
+  }
+
+  // TP50% line
+  const tp50=sp.type==='debit'?entryVal*1.5:entryVal*0.5;
+  ch.tl.setData(ohlc.map(c=>({time:c.time,value:tp50})));
+
+  // 18-DTE exit marker (vertical via price range)
+  if(expiry){
+    const exitTs=new Date(expiry+'T15:30:00+05:30').getTime()/1000 - 18*86400;
+    const near=ohlc.reduce((b,c)=>Math.abs(c.time-exitTs)<Math.abs(b.time-exitTs)?c:b,ohlc[0]);
+    if(near){
+      const mn=Math.min(...ohlc.map(c=>c.low));
+      const mx=Math.max(...ohlc.map(c=>c.high));
+      ch.xl.setData([{time:near.time,value:mn},{time:near.time,value:mx}]);
+    }
+  }
+
+  // P&L
+  const pnlData=ohlc.map(c=>{
+    const pnl=sp.type==='debit'?c.close-entryVal:entryVal-c.close;
+    return{time:c.time,value:Math.round(pnl*10)/10};
+  });
+  ch.ps.setData(pnlData);
+  ch.zl.setData(ohlc.map(c=>({time:c.time,value:0})));
+  ch.pnl.timeScale().fitContent();
+
+  // Stats bar
+  const last=ohlc[ohlc.length-1];
+  const lastPnl=sp.type==='debit'?last.close-entryVal:entryVal-last.close;
+  const decPct=entryVal?Math.round((1-last.close/entryVal)*100):0;
+  const dte=calcDTE(expiry);
+
+  setStat(spId,'en',entryVal.toFixed(1),'hi');
+  setStat(spId,'lv',last.close.toFixed(1),'live');
+  setStat(spId,'pl',(lastPnl>=0?'+':'')+lastPnl.toFixed(0),lastPnl>0?'pos':'neg');
+  setStat(spId,'dc',decPct+'%',decPct>=50?'pos':decPct>=20?'live':'neu');
+  setStat(spId,'dt',dte!=null?dte+'d':'—',dte!=null&&dte<=18?'neg':dte!=null&&dte<=21?'warn':'hi');
+
+  // header P&L display
+  const pv=$(`pnlv_${spId}`);
+  if(pv){
+    pv.textContent=`P&L: ${lastPnl>=0?'+':''}${lastPnl.toFixed(0)}`;
+    pv.className='pnlv '+(lastPnl>0?'pos':lastPnl<0?'neg':'neu');
+  }
+}
+
+function setStat(id,key,val,cls){
+  const e=$(`sv_${key}_${id}`);
+  if(e){e.textContent=val;e.className='sv '+cls}
+}
+
+function onEntry(id){renderOverlays(id)}
+
+function setEntryFirst(id){
+  const d=S.data[id];if(!d||!d.length)return;
+  const e=$(`entry_${id}`);
+  if(e){e.value=d[0].close.toFixed(1);renderOverlays(id)}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LIVE QUOTES
+// ═══════════════════════════════════════════════════════════════
+async function fetchQuotes(spIds){
+  const tokToInfo=new Map();
+  for(const spId of spIds){
+    const sp=SP.find(s=>s.id===spId);if(!sp)continue;
+    const dir=S.dirs[spId]||'bear';
+    const legs=sp.legs(S.cmp,getOff(),dir);
+    const exp=$('sel_exp').value, far=$('sel_far').value;
+    for(let i=0;i<legs.length;i++){
+      const leg=legs[i];
+      const useExp=leg.far?far:exp;
+      const inpEl=$(`str_${spId}_${i}`);
+      const strike=inpEl?parseFloat(inpEl.value)||leg.k:leg.k;
+      const instr=getToken(leg.t,strike,useExp);if(!instr)continue;
+      const tok=String(instr.token);
+      if(!tokToInfo.has(tok))tokToInfo.set(tok,[]);
+      tokToInfo.get(tok).push({spId,legIdx:i,sign:(leg.a==='S'?1:-1)*leg.q,leg});
+    }
+  }
+  if(!tokToInfo.size)return;
+
+  const toks=[...tokToInfo.keys()];
+  const qmap={};
+  // batch 400 at a time
+  for(let i=0;i<toks.length;i+=400){
+    const chunk=toks.slice(i,i+400);
+    try{
+      const params=chunk.map(t=>`i=NFO:${t}`).join('&');
+      const r=await fetch(`${S.workerUrl}/kite/quote?${params}`,{
+        headers:{'Authorization':`token ${S.apiKey}:${S.accessToken}`,'X-Kite-Version':'3'}
+      });
+      const d=await r.json();
+      Object.assign(qmap,d.data||{});
+    }catch(e){console.warn('quote err',e.message)}
+  }
+
+  const acc={};
+  for(const id of spIds)acc[id]={net:0,legs:[],ok:true};
+
+  for(const[tok,infos]of tokToInfo){
+    const q=qmap[`NFO:${tok}`];
+    for(const info of infos){
+      const ltp=q?.last_price??null;
+      const prev=q?.ohlc?.close??ltp;
+      if(ltp===null){acc[info.spId].ok=false;continue}
+      const contrib=ltp*info.sign;
+      acc[info.spId].net+=contrib;
+      acc[info.spId].legs[info.legIdx]={ltp,prev,sign:info.sign,
+        label:info.leg.lb||`${info.leg.t}${info.leg.k}`,
+        type:info.leg.t,action:info.leg.a,strike:info.leg.k,qty:info.leg.q};
+    }
+  }
+
+  for(const spId of spIds){
+    const a=acc[spId];
+    const net=Math.round(a.net*100)/100;
+    S.liveQ[spId]={net,legs:a.legs,ts:Date.now(),ok:a.ok};
+    updateLivePanel(spId);
+    updateSumCard(spId);
+    appendLive(spId,net);
+  }
+  setSb('sbData','Live: '+new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'}),'ok');
+}
+
+function updateLivePanel(spId){
+  const panel=$(`lp_${spId}`);if(!panel)return;
+  const q=S.liveQ[spId];if(!q)return;
+  const sp=SP.find(s=>s.id===spId);
+  const entry=parseFloat($(`entry_${spId}`)?.value);
+  const net=q.net;
+  const netCls=net>0?'pos':net<0?'neg':'neu';
+
+  const pnl=isNaN(entry)?null:(sp?.type==='debit'?net-entry:entry-net);
+  const pv=$(`pnlv_${spId}`);
+  if(pv&&pnl!==null){
+    pv.textContent=`P&L: ${pnl>=0?'+':''}${pnl.toFixed(0)}`;
+    pv.className='pnlv '+(pnl>0?'pos':pnl<0?'neg':'neu');
+  }
+
+  const legRows=(q.legs||[]).map(leg=>{
+    if(!leg)return'';
+    const pct=leg.prev?((leg.ltp-leg.prev)/leg.prev*100).toFixed(1):'—';
+    const chgCls=parseFloat(pct)>=0?'var(--bull)':'var(--bear)';
+    const contribCls=leg.ltp*leg.sign>=0?'var(--bull)':'var(--bear)';
+    return`<tr>
+      <td style="color:${leg.action==='S'?'var(--bear)':'var(--bull)'}">
+        ${leg.action==='S'?'▼':'▲'} ${leg.type}</td>
+      <td style="color:var(--cyan)">${leg.strike}</td>
+      <td>${leg.qty}×</td>
+      <td style="font-weight:600">${leg.ltp?.toFixed(2)??'—'}</td>
+      <td style="color:${contribCls};font-weight:700">${(leg.ltp*leg.sign>=0?'+':'')+(leg.ltp*leg.sign).toFixed(1)}</td>
+      <td style="color:${chgCls}">${pct}%</td>
+    </tr>`;
+  }).join('');
+
+  panel.innerHTML=`
+    <div class="lphdr">
+      <span class="lptitle">⚡ LIVE NET</span>
+      ${pnl!==null?`<span style="font-size:9px;font-weight:700;color:${pnl>=0?'var(--bull)':'var(--bear)'}">${pnl>=0?'+':''}${pnl.toFixed(0)} P&L</span>`:''}
+      <span style="color:var(--dim);font-size:8px;margin-left:auto">${new Date(q.ts).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'})}</span>
+    </div>
+    <div class="lpnet ${netCls}">${net>=0?'+':''}${net.toFixed(2)} pts</div>
+    <table class="lltbl">
+      <thead><tr>
+        <th>Leg</th><th>Strike</th><th>Qty</th><th>LTP</th><th>Contrib</th><th>Chg%</th>
+      </tr></thead>
+      <tbody>${legRows}</tbody>
+    </table>`;
+
+  // stats live update
+  setStat(spId,'lv',net.toFixed(1),'live');
+  if(!isNaN(entry)&&pnl!==null){
+    setStat(spId,'pl',(pnl>=0?'+':'')+pnl.toFixed(0),pnl>0?'pos':'neg');
+  }
+}
+
+function appendLive(spId,net){
+  const ch=S.charts[spId];if(!ch)return;
+  const ts=Math.floor(Date.now()/1000);
+  try{ch.cs.update({time:ts,open:net,high:net,low:net,close:net})}catch(_){}
+  const entry=parseFloat($(`entry_${spId}`)?.value);
+  const sp=SP.find(s=>s.id===spId);
+  if(!isNaN(entry)&&sp){
+    const pnl=sp.type==='debit'?net-entry:entry-net;
+    try{ch.ps.update({time:ts,value:Math.round(pnl*10)/10})}catch(_){}
+  }
+}
+
+async function quotePage(){
+  const ids=SP.filter(s=>s.pg===S.page).map(s=>s.id);
+  await fetchQuotes(ids);
+}
+async function quoteAll(){
+  await fetchQuotes(SP.map(s=>s.id));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTO REFRESH
+// ═══════════════════════════════════════════════════════════════
+function toggleAuto(){
+  if(S.autoRunning){
+    clearInterval(S.autoTimer);clearInterval(S.autoTick);
+    S.autoTimer=S.autoTick=null;S.autoRunning=false;
+    $('rdot').className='rdot';
+    $('rlabel').textContent='Live: OFF';
+    $('btnAuto').textContent='▶ START';
+    $('btnAuto').className='btn btn-g';
+    $('rnext').textContent='';
+  }else{
+    S.autoRunning=true;
+    $('rdot').className='rdot run';
+    $('btnAuto').textContent='■ STOP';
+    $('btnAuto').className='btn btn-d';
+    const iv=parseInt($('sel_ri').value)||30;
+    quotePage();
+    S.countdown=iv;
+    S.autoTick=setInterval(()=>{
+      S.countdown--;
+      $('rnext').textContent='Next: '+S.countdown+'s';
+      if(S.countdown<=0)S.countdown=iv;
+    },1000);
+    S.autoTimer=setInterval(()=>{
+      $('rlabel').textContent=`Live: ON (${iv}s)`;
+      quotePage();S.countdown=iv;
+    },iv*1000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUMMARY
+// ═══════════════════════════════════════════════════════════════
+function toggleSummary(){
+  S.sumOpen=!S.sumOpen;
+  $('summaryWrap').style.display=S.sumOpen?'block':'none';
+  $('spreadsWrap').style.display=S.sumOpen?'none':'block';
+  if(S.sumOpen){buildSumGrid();quoteAll()}
+}
+
+const LC={l0:'var(--cyan)',l1:'var(--blue)',l2:'var(--warn)',
+           l3:'var(--purp)',l4:'var(--bull)',tor:'var(--hi)',spl:'var(--bear)'};
+
+function buildSumGrid(){
+  const g=$('sumgrid');
+  g.innerHTML=SP.map(sp=>{
+    const q=S.liveQ[sp.id];
+    const dir=S.dirs[sp.id]||'bear';
+    const legs=sp.legs(S.cmp,getOff(),dir);
+    const legStr=legs.map(l=>`${l.a==='S'?'▼':'▲'}${l.t}${l.k}`).join(' · ');
+    const col=LC[sp.lay]||'var(--dim)';
+    const net=q?q.net:null;
+    const nc=net===null?'var(--dim)':net>=0?'var(--bull)':'var(--bear)';
+    const hist=S.data[sp.id]||[];
+    const spark=hist.length>0?buildSpark(hist.map(c=>c.close),col):'';
+    return`<div class="scard" id="sc_${sp.id}" onclick="goToSpread(${sp.pg})">
+      <div class="sctop">
+        <span class="scn" style="color:${col}">${sp.name}</span>
+        <span style="color:var(--dim);font-size:8px">${sp.lay.toUpperCase()}</span>
+      </div>
+      <div class="scbody">
+        <div class="scnet" id="scnet_${sp.id}" style="color:${nc}">${net!==null?(net>=0?'+':'')+net.toFixed(1):'—'}</div>
+        <div class="sclegs">${legStr}</div>
+        ${spark?`<div class="spark">${spark}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateSumCard(spId){
+  const el=$(`scnet_${spId}`);if(!el)return;
+  const q=S.liveQ[spId];if(!q)return;
+  const net=q.net;
+  el.textContent=(net>=0?'+':'')+net.toFixed(1);
+  el.style.color=net>=0?'var(--bull)':'var(--bear)';
+}
+
+function goToSpread(pg){toggleSummary();goPage(pg)}
+
+function buildSpark(vals,col){
+  if(!vals.length)return'';
+  const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  return vals.slice(-36).map(v=>{
+    const h=Math.max(2,Math.round(((v-mn)/rng)*22));
+    const c=v>=(mn+rng/2)?col:'var(--bear)';
+    return`<span style="height:${h}px;background:${c}"></span>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD PAGE
+// ═══════════════════════════════════════════════════════════════
+async function loadPage(){
+  S.from=$('inp_from').value; S.to=$('inp_to').value;
+  S.expiry=$('sel_exp').value; S.farExpiry=$('sel_far').value;
+  const spreads=SP.filter(s=>s.pg===S.page);
+  for(const sp of spreads)await loadData(sp.id);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════
+function showVeil(id,on){
+  const box=$(`cbox_${id}`);if(!box)return;
+  let v=box.querySelector('.veil');
+  if(on){
+    if(!v){v=document.createElement('div');v.className='veil';
+      v.innerHTML='<div class="vspin"></div><div class="vtxt">Fetching Kite data…</div>';
+      box.appendChild(v)}
+  }else{v?.remove()}
+}
+
+function showErr(id,msg){
+  const e=$(`cprem_${id}`);
+  if(e)e.innerHTML=`<div class="verr">${msg.replace(/\n/g,'<br>')}</div>`;
+}
+
+function setSb(id,txt,cls=''){
+  const e=$(id);if(!e)return;
+  e.innerHTML=`<span class="${cls}">${txt}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════════════════════
+setInterval(()=>{
+  $('sbTime').textContent=new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'})+' IST';
+},1000);
+
+// ═══════════════════════════════════════════════════════════════
+// INIT — check saved credentials
+// ═══════════════════════════════════════════════════════════════
+(function init(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('jade')||'{}');
+    const todayIST=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+    if(saved.tok&&saved.date===todayIST&&saved.wk&&saved.key&&saved.sec){
+      S.workerUrl=saved.wk; S.apiKey=saved.key;
+      S.apiSecret=saved.sec; S.accessToken=saved.tok;
+      $('a_worker').value=saved.wk;
+      $('a_key').value=saved.key;
+      $('a_sec').value=saved.sec;
+      $('savedBadge').style.display='block';
+      $('btnLaunch').style.display='block';
+      amsg('✓ Token valid for today. Tap Launch!','ok');
+    }
+  }catch(_){}
+
+  // Set default dates
+  const today=new Date();
+  const from50=new Date(today);from50.setDate(from50.getDate()-50);
+  $('inp_from').value=from50.toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+  $('inp_to').value=today.toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+})();
+</script>
+</body>
+</html>
