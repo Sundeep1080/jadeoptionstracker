@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
-<title>⚡ JADE SUPREMA v16</title>
+<title>⚡ JADE SUPREMA v16A</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#07090d;--bg2:#0c111a;--bg3:#111922;--bg4:#18232e;
-  --b1:#1a2a38;--b2:#243648;--b3:#2e4259;
-  --txt:#9ab8cc;--dim:#3d5568;--hi:#f0c040;--hi2:#c08820;
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2331;--bg4:#21293a;
+  --b1:#253145;--b2:#2d3f58;--b3:#374e6b;
+  --txt:#a8c5db;--dim:#4a6478;--hi:#f0c040;--hi2:#c08820;
   --bull:#22d46e;--bull2:#0b4a28;--bear:#f04060;--bear2:#5a1828;
   --blue:#2d9cdb;--blue2:#103a55;--cyan:#18c9a8;--cyan2:#064038;
   --warn:#e8922a;--purp:#9455c8;--r:4px;
@@ -26,12 +26,12 @@ body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospac
 /* ══ AUTH ═══════════════════════════════════════════════════════ */
 #authWrap{
   position:fixed;inset:0;z-index:9999;
-  background:radial-gradient(ellipse at 25% 35%,#0c1c2c,#04080e 70%);
+  background:radial-gradient(ellipse at 25% 35%,#131d2e,#0a0f1a 70%);
   display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;
 }
 .abox{
   width:100%;max-width:480px;
-  background:linear-gradient(145deg,#0c1520,#070b10);
+  background:linear-gradient(145deg,#131d2e,#0d1320);
   border:1px solid var(--b2);border-radius:10px;padding:24px;
   position:relative;overflow:hidden;
 }
@@ -88,7 +88,7 @@ body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospac
 /* ── Header ─────────────────────────────────────────── */
 .hdr{
   height:var(--hdr);flex-shrink:0;
-  background:linear-gradient(90deg,#04080f,#07111e);
+  background:linear-gradient(90deg,#0d1421,#111b2e);
   border-bottom:1px solid var(--b1);
   display:flex;align-items:center;padding:0 12px;gap:12px;
 }
@@ -382,7 +382,7 @@ body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospac
 <div id="authWrap">
 <div class="abox">
   <div class="atitle">⚡ JADE SUPREMA</div>
-  <div class="asub">SPREAD PREMIUM TRACKER · v16</div>
+  <div class="asub">SPREAD PREMIUM TRACKER · v16A</div>
 
   <div id="savedBadge" class="saved-badge">✓ Credentials saved — token valid for today</div>
 
@@ -844,20 +844,33 @@ async function kitePost(path,body){
 // ═══════════════════════════════════════════════════════════════
 async function fetchSpotCmp(){
   try{
-    // NSE:NIFTY 50 index token is 256265
-    const r=await fetch(`${S.workerUrl}/kite/quote?i=NSE:NIFTY+50`,{
+    // Use Kite LTP endpoint with NSE NIFTY 50 index instrument token 256265
+    // LTP is lighter than full quote and always works for index
+    const r=await fetch(`${S.workerUrl}/kite/ltp?i=NSE%3ANIFTY+50`,{
       headers:{'Authorization':`token ${S.apiKey}:${S.accessToken}`,'X-Kite-Version':'3'}
     });
-    if(!r.ok)return;
+    if(!r.ok){
+      // Fallback: try full quote endpoint
+      const r2=await fetch(`${S.workerUrl}/kite/quote?i=NSE%3ANIFTY+50`,{
+        headers:{'Authorization':`token ${S.apiKey}:${S.accessToken}`,'X-Kite-Version':'3'}
+      });
+      if(!r2.ok)return;
+      const d2=await r2.json();
+      const ltp2=d2?.data?.['NSE:NIFTY 50']?.last_price;
+      if(ltp2&&!isNaN(ltp2)){setCmp(ltp2);}
+      return;
+    }
     const d=await r.json();
     const ltp=d?.data?.['NSE:NIFTY 50']?.last_price;
-    if(!ltp||isNaN(ltp))return;
-    const snapped=Math.round(ltp/50)*50; // snap to nearest 50 for ATM strikes
-    $('inp_cmp').value=snapped;
-    onCmp();
-    // Update header
-    $('hCmp').textContent=ltp.toFixed(0);
+    if(ltp&&!isNaN(ltp))setCmp(ltp);
   }catch(e){console.warn('spot fetch failed',e.message)}
+}
+
+function setCmp(ltp){
+  // Show raw LTP in header, snap to nearest 50 in CMP input for strike selection
+  $('hCmp').textContent=ltp.toFixed(0);
+  $('inp_cmp').value=Math.round(ltp/50)*50;
+  onCmp();
 }
 
 // ═══════════════════════════════════════════════════════════════
