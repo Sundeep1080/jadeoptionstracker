@@ -437,6 +437,11 @@ body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospac
       <div class="hmet"><span class="v" id="hDte">—</span><span class="l">DTE</span></div>
       <div class="hmet"><span class="v" id="hA1">—</span><span class="l">off1·A</span></div>
       <div class="hmet"><span class="v gate-ok" id="hGate">GATE</span><span class="l">STATUS</span></div>
+      <div class="hmet" id="hTokTime" style="display:none">
+        <span class="v" id="hTokTimeVal" style="font-size:9px;color:var(--warn)">—</span>
+        <span class="l">TOKEN@</span>
+      </div>
+      <button class="hbtn" style="color:var(--warn);border-color:var(--warn)" onclick="showAuth()" title="Re-authenticate with fresh token">⟳ RE-AUTH</button>
       <button class="hbtn" onclick="showAuth()">⚙</button>
     </div>
   </div>
@@ -781,11 +786,16 @@ async function exchangeToken(){
     const tok=d.data.access_token;
     S.workerUrl=wk; S.apiKey=key; S.apiSecret=sec; S.accessToken=tok;
     const todayIST=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
-    localStorage.setItem('jade',JSON.stringify({wk,key,sec,tok,date:todayIST}));
+    const nowIST=new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:false});
+    localStorage.setItem('jade',JSON.stringify({wk,key,sec,tok,date:todayIST,time:nowIST}));
     const tb=$('tokenBox');
     tb.textContent='ACCESS TOKEN: '+tok.slice(0,16)+'…  (tap to copy)';
     tb.style.display='block';
     $('btnLaunch').style.display='block';
+    const tb2=$('savedBadge');
+    const nowDisp=new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:false});
+    tb2.textContent=`✓ Token generated at ${nowDisp} IST — Ready to launch`;
+    tb2.style.display='block';
     amsg('✓ Access token generated. Ready to launch!','ok');
   }catch(e){amsg('Error: '+e.message,'err')}
 }
@@ -980,6 +990,14 @@ function combineOHLC(legCandles,signs){
 async function launch(){
   hideAuth();
   $('mainApp').style.display='flex';
+  // Show token timestamp in header
+  try{
+    const j=JSON.parse(localStorage.getItem('jade')||'{}');
+    if(j.time){
+      $('hTokTimeVal').textContent=j.time+' IST';
+      $('hTokTime').style.display='flex';
+    }
+  }catch(_){}
   buildNav();
   const ok=await loadInstruments();
   if(ok){
@@ -1796,6 +1814,8 @@ setInterval(()=>{
       $('a_worker').value=saved.wk;
       $('a_key').value=saved.key;
       $('a_sec').value=saved.sec;
+      const savedTime=saved.time||'';
+      $('savedBadge').textContent=`✓ Credentials saved — token loaded at ${savedTime} IST`;
       $('savedBadge').style.display='block';
       $('btnLaunch').style.display='block';
       amsg('✓ Token valid for today. Tap Launch!','ok');
