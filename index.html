@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
         <span class="v" id="hTokTimeVal" style="font-size:9px;color:var(--warn)">—</span>
         <span class="l">TOKEN@</span>
       </div>
-      <button class="hbtn" style="color:var(--bull);border-color:var(--bull);font-weight:700" onclick="showBriefing()" title="Morning regime briefing">☀ BRIEF</button>
+      <button class="hbtn" id="btnBrief" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4);font-weight:600" onclick="showBriefing()" title="Morning regime briefing — tap every morning">☀ BRIEF</button>
       <button class="hbtn" style="color:var(--warn);border-color:var(--warn)" onclick="showAuth()" title="Re-authenticate with fresh token">⟳ RE-AUTH</button>
       <button class="hbtn" onclick="showAuth()">⚙</button>
     </div>
@@ -980,22 +980,36 @@ const SP = [
      {t:'PE',k:snap25(c-o.o3),     q:1,a:'B',lb:'BP −off3'},
      {t:'CE',k:snap25(c+o.o2),     q:1,a:'B',lb:'BC +off2'}]},
   // PAGE 7 — Tortoises
-  {id:'s70',pg:7,name:'GF TORTOISE (RevJade)',    lay:'tor',type:'credit',
-   desc:'Band 9/10 · HMA↓cross+SMI OB · SC+1 BC+2 SP−2 BP−3 + Journey SC(far)',
-   note:'Main 4 legs → primary Expiry · Journey SC → Far Expiry (90d)',dir:false,
-   legs:(c,o)=>[{t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
-                {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'},
-                {t:'PE',k:snap25(c-o.o2),q:1,a:'S',lb:'SP −off2'},
-                {t:'PE',k:snap25(c-o.o3),q:1,a:'B',lb:'BP −off3'},
-                {t:'CE',k:snap25(c),     q:1,a:'S',lb:'Journey SC ATM',far:true}]},
-  {id:'s71',pg:7,name:'GM TORTOISE (Jade)',       lay:'tor',type:'credit',
-   desc:'Band 1/2 · HMA↑cross+SMI OS · SP−1 BP−2 SC+2 BC+3 + Journey SP(far)',
-   note:'Main 4 legs → primary Expiry · Journey SP → Far Expiry (90d)',dir:false,
-   legs:(c,o)=>[{t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
-                {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'},
-                {t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC +off2'},
-                {t:'CE',k:snap25(c+o.o3),q:1,a:'B',lb:'BC +off3'},
-                {t:'PE',k:snap25(c),     q:1,a:'S',lb:'Journey SP ATM',far:true}]},
+  // GF TORTOISE — Pine Script lines 885-890 exact:
+  // gfSC=snap25(cp+off1), gfBC=snap25(cp+off2), gfSP=snap25(cp-off2), gfBP=snap25(cp-off3)
+  // gfJrSC=snap25(cp) → FAR expiry journey leg
+  // Structure: RevJade (SC above, SP below asymmetric) + Journey SC ATM on far expiry
+  // Band 9/10 · HMA bear cross · SMI overbought → bearish mean-reversion
+  {id:'s70',pg:7,name:'GF TORTOISE (RevJade Bear)',lay:'tor',type:'credit',
+   desc:'Band 9/10 · HMA↓cross · SMI OB · SC @+off1 · BC @+off2 · SP @−off2 · BP @−off3 · Journey SC ATM (far 90d)',
+   note:'Main 4 legs use primary Expiry · Journey SC (ATM) uses Far Expiry ~90d',dir:false,
+   legs:(c,o)=>[
+     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1 (RevJade upper short)'},
+     {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2 (call wing)'},
+     {t:'PE',k:snap25(c-o.o2),q:1,a:'S',lb:'SP −off2 (RevJade lower short)'},
+     {t:'PE',k:snap25(c-o.o3),q:1,a:'B',lb:'BP −off3 (put wing)'},
+     {t:'CE',k:snap25(c),     q:1,a:'S',lb:'Journey SC ATM (FAR ~90d)',far:true}
+   ]},
+  // GM TORTOISE — Pine Script lines 919-924 exact:
+  // gmSP=snap25(cp-off1), gmBP=snap25(cp-off2), gmSC=snap25(cp+off2), gmBC=snap25(cp+off3)
+  // gmJrSP=snap25(cp) → FAR expiry journey leg
+  // Structure: Jade (SP below closer, SC above wider) + Journey SP ATM on far expiry
+  // Band 1/2 · HMA bull cross · SMI oversold → bullish mean-reversion
+  {id:'s71',pg:7,name:'GM TORTOISE (Jade Bull)',   lay:'tor',type:'credit',
+   desc:'Band 1/2 · HMA↑cross · SMI OS · SP @−off1 · BP @−off2 · SC @+off2 · BC @+off3 · Journey SP ATM (far 90d)',
+   note:'Main 4 legs use primary Expiry · Journey SP (ATM) uses Far Expiry ~90d',dir:false,
+   legs:(c,o)=>[
+     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1 (Jade lower short, closer)'},
+     {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2 (put wing)'},
+     {t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC +off2 (Jade upper short, wider)'},
+     {t:'CE',k:snap25(c+o.o3),q:1,a:'B',lb:'BC +off3 (call wing)'},
+     {t:'PE',k:snap25(c),     q:1,a:'S',lb:'Journey SP ATM (FAR ~90d)',far:true}
+   ]},
   // PAGE 8 — Cobra + Batman
   {id:'s80',pg:8,name:'KING COBRA',               lay:'spl',type:'credit',
    desc:'VA · HVP<35 · ATM straddle + wings ±off2 · 0.5x · Pin mode',dir:false,
@@ -1199,10 +1213,9 @@ async function fetchSpotOhlc(from,to){
 }
 
 function setCmp(ltp){
-  const raw=ltp.toFixed(0);
-  const snapped=Math.round(ltp/50)*50;
-  $('hCmp').textContent=raw;
+  $('hCmp').textContent=ltp.toFixed(1);   // exact — no rounding
   $('hCmp').style.color='var(--cyan)';
+  const snapped=Math.round(ltp/25)*25;    // snap to nearest 25 for strike calc
   $('inp_cmp').value=snapped;
   S.cmp=snapped;
   onCmp();
@@ -1218,7 +1231,7 @@ async function fetchSpotCmp(){
     const d=await r.json();
     const ltp=d?.data?.['NSE:NIFTY 50']?.last_price;
     if(ltp&&!isNaN(ltp)){
-      $('hCmp').textContent=ltp.toFixed(0);
+      $('hCmp').textContent=ltp.toFixed(1);  // exact, no rounding
       $('hCmp').style.color='var(--cyan)';
     }
   }catch(e){console.warn('live spot failed',e.message);}
@@ -1408,7 +1421,7 @@ function getOff(){
     o6:parseFloat($('inp_o6').value)||1200,
   };
 }
-function onCmp(){S.cmp=parseFloat($('inp_cmp').value)||24000;$('hCmp').textContent=S.cmp.toFixed(0)}
+function onCmp(){S.cmp=parseFloat($('inp_cmp').value)||24000;$('hCmp').textContent=S.cmp.toFixed(1);}
 function onOff(){S.off=getOff();$('hA1').textContent=S.off.o1}
 function onTf(){S.tf=$('sel_tf').value}
 function onExpiry(){
@@ -2694,7 +2707,7 @@ function computeRegime(dailyCandles, intradayCandles) {
       hvPct >= 35 ? `DORMANT — HVP=${hvPct}% (need <35)` :
       !hmaFlat ? 'DORMANT — HMA not flat' : 'DORMANT — SMI not neutral',
     statusCls: cobraOk ? 'ok' : 'warn', cardCls: cobraOk ? 'special' : 'blocked',
-    strikes: cobraOk ? `SC ATM @${snap25(cp)}  SP ATM @${snap25(cp)}  BC @${snap25(cp+o.off2)}  BP @${snap25(cp-o.off2)}` : '—',
+    strikes: cobraOk ? `SC CE ATM @${snap25(cp)}  SP PE ATM @${snap25(cp)}  BC CE @${snap25(cp+o.off2)}  BP PE @${snap25(cp-o.off2)}` : '—',
     credit:'~ATM straddle', tp:'40% credit', sl:'off2 breach', size:'0.5x MANDATORY',
     note:'Only fires when HVP<35. Replaces all other premium selling.',
     tags:['tp:40%','sl:off2','0.5x']
@@ -2905,7 +2918,7 @@ function computeRegime(dailyCandles, intradayCandles) {
       !smiOB ? 'WAITING — Need SMI overbought' :
       `BLOCKED — HVP=${hvPct}%`,
     statusCls: gfOk ? 'ok' : 'warn', cardCls: gfOk ? 'eligible' : 'waiting',
-    strikes: gfOk ? `SC @${snap25(cp+o.off1)}  BC @${snap25(cp+o.off2)}  SP @${snap25(cp-o.off2)}  BP @${snap25(cp-o.off3)}  Journey SC (far) @${snap25(cp)}` : '—',
+    strikes: gfOk ? `SC CE @${snap25(cp+o.off1)}  BC CE @${snap25(cp+o.off2)}  SP PE @${snap25(cp-o.off2)}  BP PE @${snap25(cp-o.off3)}  Journey SC CE ATM @${snap25(cp)} [FAR]` : '—',
     credit:'Structural decay', tp:'Decay to expiry', sl:'SP breach', size:'Full',
     note:'Journey SC on far expiry (~90d). Roll @16 DTE.',
     tags:['structural','roll @16d','far leg']
@@ -2919,7 +2932,7 @@ function computeRegime(dailyCandles, intradayCandles) {
       !smiOS ? 'WAITING — Need SMI oversold' :
       `BLOCKED — HVP=${hvPct}%`,
     statusCls: gmOk ? 'ok' : 'warn', cardCls: gmOk ? 'eligible' : 'waiting',
-    strikes: gmOk ? `SP @${snap25(cp-o.off1)}  BP @${snap25(cp-o.off2)}  SC @${snap25(cp+o.off2)}  BC @${snap25(cp+o.off3)}  Journey SP (far) @${snap25(cp)}` : '—',
+    strikes: gmOk ? `SP PE @${snap25(cp-o.off1)}  BP PE @${snap25(cp-o.off2)}  SC CE @${snap25(cp+o.off2)}  BC CE @${snap25(cp+o.off3)}  Journey SP PE ATM @${snap25(cp)} [FAR]` : '—',
     credit:'Structural decay', tp:'Decay to expiry', sl:'BC breach', size:'Full',
     note:'Journey SP on far expiry (~90d). Roll @16 DTE.',
     tags:['structural','roll @16d','far leg']
