@@ -120,7 +120,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 /* ── Header ─────────────────────────────────────────── */
 .hdr{
   height:var(--hdr);flex-shrink:0;
-  background:var(--hi);;
+  background:var(--hi);
   border-bottom:1px solid var(--b1);
   display:flex;align-items:center;padding:0 12px;gap:12px;
 }
@@ -1182,12 +1182,16 @@ async function fetchEntryNifty(){
     $('inp_cmp').value=Math.round(entryClose/50)*50;
     S.cmp=Math.round(entryClose/50)*50;
     $('hCmp').textContent=entryClose.toFixed(0);
-    $('hCmp').style.color='var(--accent)';
+    $('hCmp').style.color='#7ee8f0';  // entry nifty — bright cyan on navy
     onCmp(); onOff();
     setSb('sbData','Entry Nifty '+entryDate+': '+entryClose.toFixed(0),'ok');
-    // Show confirmation in config label
-    const lbl=document.querySelector('label[for="inp_cmp"]');
-    if(lbl)lbl.textContent='Entry Nifty ('+entryDate+')';
+    // Show Entry Nifty date in the config strip label
+    document.querySelectorAll('.cg label').forEach(lbl=>{
+      if(lbl.textContent.includes('Entry Nifty'))
+        lbl.textContent='Entry Nifty ('+entryDate+')';
+    });
+    // Also show in header tooltip
+    $('hCmp').title='Entry Nifty on '+entryDate+': '+entryClose.toFixed(1);
   }catch(e){
     setSb('sbData','Entry Nifty err: '+e.message.slice(0,40),'err');
     console.warn('fetchEntryNifty failed',e);
@@ -1213,9 +1217,9 @@ async function fetchSpotOhlc(from,to){
 }
 
 function setCmp(ltp){
-  $('hCmp').textContent=ltp.toFixed(1);   // exact — no rounding
-  $('hCmp').style.color='var(--cyan)';
-  const snapped=Math.round(ltp/25)*25;    // snap to nearest 25 for strike calc
+  $('hCmp').textContent=ltp.toFixed(1);
+  $('hCmp').style.color='#7ee8f0';   // bright cyan — visible on navy header
+  const snapped=Math.round(ltp/25)*25;
   $('inp_cmp').value=snapped;
   S.cmp=snapped;
   onCmp();
@@ -1231,8 +1235,8 @@ async function fetchSpotCmp(){
     const d=await r.json();
     const ltp=d?.data?.['NSE:NIFTY 50']?.last_price;
     if(ltp&&!isNaN(ltp)){
-      $('hCmp').textContent=ltp.toFixed(1);  // exact, no rounding
-      $('hCmp').style.color='var(--cyan)';
+      $('hCmp').textContent=ltp.toFixed(1);
+      $('hCmp').style.color='#7ee8f0';  // bright cyan visible on navy
     }
   }catch(e){console.warn('live spot failed',e.message);}
 }
@@ -1421,7 +1425,7 @@ function getOff(){
     o6:parseFloat($('inp_o6').value)||1200,
   };
 }
-function onCmp(){S.cmp=parseFloat($('inp_cmp').value)||24000;$('hCmp').textContent=S.cmp.toFixed(1);}
+function onCmp(){S.cmp=parseFloat($('inp_cmp').value)||24000;$('hCmp').textContent=S.cmp.toFixed(1);$('hCmp').style.color='#ffffff';}
 function onOff(){S.off=getOff();$('hA1').textContent=S.off.o1}
 function onTf(){S.tf=$('sel_tf').value}
 function onExpiry(){
@@ -1560,7 +1564,7 @@ function buildCard(sp){
 
     <!-- STATS BAR -->
     <div class="sbar" id="sbar_${sp.id}">
-      <div class="sc"><div class="sv hi" id="sv_en_${sp.id}">—</div><div class="sl">Entry</div></div>
+      <div class="sc"><div class="sv hi" id="sv_en_${sp.id}">—</div><div class="sl">Prem@50d</div></div>
       <div class="sc"><div class="sv live" id="sv_lv_${sp.id}">—</div><div class="sl">Live Net</div></div>
       <div class="sc"><div class="sv neu" id="sv_pl_${sp.id}">—</div><div class="sl">P&amp;L pts</div></div>
       <div class="sc"><div class="sv neu" id="sv_dc_${sp.id}">—</div><div class="sl">Decayed</div></div>
@@ -1869,7 +1873,8 @@ async function loadData(spId){
     if(dtw&&dtw.style.display==='block')renderDecayTable(spId);
     // Refresh cross-spread table if summary is open
     if(S.sumOpen)renderXtbl();
-    setSb('sbData',`${sp.name}: ${ohlc.length} bars`,'ok');
+    const barMsg=ohlc.length<10?` (⚠ only ${ohlc.length} bars — expiry too close)`:'';
+    setSb('sbData',`${sp.name}: ${ohlc.length} bars${barMsg}`,ohlc.length<10?'warn':'ok');
     if(miss.length){
       const n=$(`card_${spId}`)?.querySelector('.card-note');
       if(n)n.textContent=`⚠ Missing: ${miss.join(', ')} — omitted`;
@@ -2536,14 +2541,13 @@ function calcBands(closes, highs, lows, atr, n) {
   const vaLoIdx = Math.max(0, Math.floor((mid - vaRange / 2 - mn) / step));
   const vaHiIdx = Math.min(n - 1, Math.floor((mid + vaRange / 2 - mn) / step));
   // REJ zones = top 2 and bottom 2 bands (bands 9,8 above; 0,1 below)
-  const rejZ1 = n - 1; // top band
-  const rejZ2 = n - 2; // second top
-  const rejZ3 = 0;     // bottom band
-  const rejZ4 = 1;     // second bottom
+  const rejZ1 = n - 1; // top band (Pine Script: nb-1)
+  const rejZ2 = n - 2; // second top band (Pine Script: nb-2)
+  // Pine Script REJ = top 2 bands ONLY — not bottom
   const inVA = curBand >= vaLoIdx && curBand <= vaHiIdx;
   const aboveVA = curBand > vaHiIdx;
   const belowVA = curBand < vaLoIdx;
-  const inREJ = curBand === rejZ1 || curBand === rejZ2 || curBand === rejZ3 || curBand === rejZ4;
+  const inREJ = curBand === rejZ1 || curBand === rejZ2;
   const btwnVAREJ = !inVA && !inREJ;
   const inB1 = curBand === 0, inB2 = curBand === 1;
   const inB9 = curBand === n - 2, inB10 = curBand === n - 1;
@@ -2790,8 +2794,12 @@ function computeRegime(dailyCandles, intradayCandles) {
   });
 
   // L2 DRL (REJ zone, HMA+SMI turning)
-  const l2Bear = bnd.inREJ && bnd.aboveVA && (hmaBear || hmaCrsBear) && (smiBear || false) && gatePass;
-  const l2Bull = bnd.inREJ && bnd.belowVA && (hmaBull || hmaCrsBull) && (smiBull || false) && gatePass;
+  // REJ = top 2 bands. At REJ above VA = bear signal. REJ is always above VA now.
+  // Pine: rejAbove2 = rejZ1/Z2 > vaHiIdx → always true since REJ = top 2
+  const l2Bear = bnd.inREJ && (hmaBear || hmaCrsBear) && gatePass;
+  const l2Bull = false; // Bull L2 only when REJ is below VA — not possible with top-2 REJ
+  // Note: in Pine Script, if user sets bands differently REJ could be below VA too
+  // For standard 10-band setup, REJ is always top 2 → always bearish at REJ
   const l2Early = bnd.inREJ && !l2Bear && !l2Bull && (hmaTurnDn || hmaTurnUp);
   const l2Ok = l2Bear || l2Bull;
   const drlDir = l2Bear ? 'BEAR' : l2Bull ? 'BULL' : '—';
@@ -3123,11 +3131,18 @@ function renderBriefing(r) {
     const isVA = i >= r.bnd.vaLoIdx && i <= r.bnd.vaHiIdx;
     const isREJ = i === r.bnd.rejZ1 || i === r.bnd.rejZ2;
     const isCur = i === r.bnd.curBand;
-    const h = 8 + (i / r.bnd.n) * 24;
-    const bg = isCur?'var(--hi)':isVA?'var(--bull2)':isREJ?'var(--bear2)':'var(--b1)';
-    const tc = isCur?'#000':isVA?'var(--bull)':isREJ?'var(--bear)':'var(--dim)';
-    return `<div class="band-box" style="height:${h}px;background:${bg};color:${tc}" title="Band ${i+1}: ${Math.round(b.lo)}-${Math.round(b.hi)}">${isCur?'●':isVA?'VA':isREJ?'R':''}</div>`;
-  }).join('');
+    const isTort = i <= 1 || i >= r.bnd.n-2; // B1/B2 = GM Tort, B9/B10 = GF Tort
+    const h = 10 + (i / r.bnd.n) * 22;
+    const bg = isCur?'var(--hi)':isREJ?'#fde8e8':isVA?'#e8f4ed':isTort?'#fef3e2':'var(--bg3)';
+    const border = isCur?'2px solid var(--hi)':isREJ?'1px solid var(--bear)':isVA?'1px solid var(--bull)':'1px solid var(--b1)';
+    const tc = isCur?'#fff':isREJ?'var(--bear)':isVA?'var(--bull)':isTort?'var(--warn)':'var(--dim)';
+    const lbl = isCur?`${i+1}●`:isREJ?`${i+1}R`:isVA?`${i+1}VA`:isTort?`${i+1}T`:`${i+1}`;
+    return `<div class="band-box" style="height:${h}px;background:${bg};border:${border};color:${tc};font-size:7px" 
+      title="Band ${i+1}: ${Math.round(b.lo)}–${Math.round(b.hi)}">${lbl}</div>`;
+  }).join('') + `<div style="font-size:8px;color:var(--dim);margin-left:8px;align-self:center">
+    NIFTY: <b style="color:var(--hi)">${r.cp.toFixed(0)}</b><br>
+    <span style="color:var(--bull)">VA: ${Math.round(r.bnd.vaLoP)}–${Math.round(r.bnd.vaHiP)}</span>
+  </div>`;
 
   // Structure cards
   const eligible = r.structs.filter(s => s.eligible);
