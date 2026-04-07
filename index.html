@@ -858,133 +858,54 @@ const SP = [
    legs:(c,o)=>[{t:'CE',k:snap25(c+o.o4),q:2,a:'B',lb:'BC 2x +off4'},
                 {t:'CE',k:snap25(c+o.o6),q:1,a:'S',lb:'SC 1x +off6'}]},
   // PAGE 1 — L1A
-  {id:'s10',pg:1,name:'JRF — JADE RATIO FLY',   lay:'l1',type:'credit',
-   desc:'VA · 4 shorts ATM±0.5A · Wings ±2.5A · R:R 44:1',dir:false,
-   legs:(c,o)=>[{t:'CE',k:snap25(c),        q:1,a:'S',lb:'SC1 ATM'},
-                {t:'CE',k:snap25(c+o.o1*.5),q:1,a:'S',lb:'SC2 +0.5A'},
-                {t:'PE',k:snap25(c),        q:1,a:'S',lb:'SP1 ATM'},
-                {t:'PE',k:snap25(c-o.o1*.5),q:1,a:'S',lb:'SP2 −0.5A'},
-                {t:'CE',k:snap25(c+o.o1*2.5),q:1,a:'B',lb:'BC +2.5A'},
-                {t:'PE',k:snap25(c-o.o1*2.5),q:1,a:'B',lb:'BP −2.5A'}]},
   {id:'s11',pg:1,name:'IC — IRON CONDOR',        lay:'l1',type:'credit',
-   desc:'VA · Δ0.16 sym · SC/SP @±off2 · Wings @±2×off2',dir:false,
-   legs:(c,o)=>[{t:'CE',k:snap25(c+o.o2),  q:1,a:'S',lb:'SC +off2'},
-                {t:'CE',k:snap25(c+o.o2*2),q:1,a:'B',lb:'BC +2×off2'},
-                {t:'PE',k:snap25(c-o.o2),  q:1,a:'S',lb:'SP −off2'},
-                {t:'PE',k:snap25(c-o.o2*2),q:1,a:'B',lb:'BP −2×off2'}]},
-  // PAGE 2 — L1B/C
-  {id:'s20',pg:2,name:'DOUBLE CALENDAR',         lay:'l1',type:'debit',
-   desc:'VA · Low-vol · ATM call+put calendar · Near sell / Far buy',
-   note:'Near legs → main Expiry · Far legs → Far Expiry',dir:false,
-   legs:(c,o)=>[{t:'CE',k:snap25(c),q:1,a:'S',lb:'Near SC ATM'},
-                {t:'CE',k:snap25(c),q:1,a:'B',lb:'Far  BC ATM',far:true},
-                {t:'PE',k:snap25(c),q:1,a:'S',lb:'Near SP ATM'},
-                {t:'PE',k:snap25(c),q:1,a:'B',lb:'Far  BP ATM',far:true}]},
+   desc:'VA · Δ≈0.16 strikes · SC@+off1 · SP@−off1 · Wings SC+off2/SP−off2 (symmetric)',dir:false,
+   legs:(c,o)=>[
+     {t:'CE',k:snap25(c+o.o1),            q:1,a:'S',lb:'SC +off1 (Δ≈0.16)'},
+     {t:'CE',k:snap25(c+o.o1+o.o2),       q:1,a:'B',lb:'BC SC+off2'},
+     {t:'PE',k:snap25(c-o.o1),            q:1,a:'S',lb:'SP −off1 (Δ≈0.16)'},
+     {t:'PE',k:snap25(c-o.o1-o.o2),       q:1,a:'B',lb:'BP SP−off2'}
+   ]},
   {id:'s21',pg:2,name:'IBF — IRON BUTTERFLY',    lay:'l1',type:'credit',
    desc:'VA · Pin mode · HVP<30 · ATM straddle sell · Wings ±off2 · TP 25%',dir:false,
-   legs:(c,o)=>[{t:'CE',k:snap25(c),    q:1,a:'S',lb:'SC ATM'},
-                {t:'PE',k:snap25(c),    q:1,a:'S',lb:'SP ATM'},
-                {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'},
-                {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'}]},
-  // PAGE 3 — Stacked IC + DRL
-  {id:'s30',pg:3,name:'STACKED IC',              lay:'l1',type:'credit',
-   desc:'Add when first IC hits 50% profit · SC/SP @±off2 · Wings @±off3',dir:false,
-   legs:(c,o)=>[{t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC +off2'},
-                {t:'CE',k:snap25(c+o.o3),q:1,a:'B',lb:'BC +off3'},
-                {t:'PE',k:snap25(c-o.o2),q:1,a:'S',lb:'SP −off2'},
-                {t:'PE',k:snap25(c-o.o3),q:1,a:'B',lb:'BP −off3'}]},
-  {id:'s31',pg:3,name:'DRL — DBL RATIO LIZARD',  lay:'l2',type:'credit',
-   desc:'REJ · SC(1-2x)@ATM + SP(1-2x)@±0.5A · R:R 199:1',dir:true,
-   legs:(c,o,d)=>d==='bull'?[
-     {t:'PE',k:snap25(c),         q:1,a:'S',lb:'SP ATM'},
-     {t:'CE',k:snap25(c+o.o1*.5),q:1,a:'S',lb:'SC +0.5A'},
-     {t:'PE',k:snap25(c-o.o2),   q:1,a:'B',lb:'BP −off2'},
-     {t:'CE',k:snap25(c+o.o1*2.5),q:1,a:'B',lb:'BC +2.5A'}]:[
-     {t:'CE',k:snap25(c),         q:1,a:'S',lb:'SC ATM'},
-     {t:'PE',k:snap25(c-o.o1*.5),q:1,a:'S',lb:'SP −0.5A'},
-     {t:'CE',k:snap25(c+o.o2),   q:1,a:'B',lb:'BC +off2'},
-     {t:'PE',k:snap25(c-o.o1*2.5),q:1,a:'B',lb:'BP −2.5A'}]},
-  // PAGE 4 — Fat Lizard + Jade Lizard
-  {id:'s40',pg:4,name:'FAT LIZARD (2x RATIO)',   lay:'l2',type:'credit',
-   desc:'REJ · Strong + HVP>50 · Bear: 2x SC · Bull: 2x SP · TP 55%',dir:true,
-   legs:(c,o,d)=>d==='bull'?[
-     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
-     {t:'PE',k:snap25(c),     q:2,a:'S',lb:'SP 2x ATM'},
-     {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'}]:[
-     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
-     {t:'CE',k:snap25(c),     q:2,a:'S',lb:'SC 2x ATM'},
-     {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'}]},
-  {id:'s41',pg:4,name:'JADE LIZARD / REV JADE',  lay:'l2',type:'credit',
-   desc:'REJ · Bear=Jade Liz · Bull=Rev Jade · Zero one-side risk',dir:true,
-   legs:(c,o,d)=>d==='bull'?[
-     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
-     {t:'PE',k:snap25(c),     q:1,a:'S',lb:'SP ATM'},
-     {t:'PE',k:snap25(c-o.o1),q:1,a:'B',lb:'BP −off1'}]:[
-     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
-     {t:'CE',k:snap25(c),     q:1,a:'S',lb:'SC ATM'},
-     {t:'CE',k:snap25(c+o.o1),q:1,a:'B',lb:'BC +off1'}]},
-  // PAGE 5 — L3 JRC + Monitor
+   legs:(c,o)=>[
+     {t:'CE',k:snap25(c),       q:1,a:'S',lb:'SC ATM'},
+     {t:'PE',k:snap25(c),       q:1,a:'S',lb:'SP ATM'},
+     {t:'CE',k:snap25(c+o.o2),  q:1,a:'B',lb:'BC +off2'},
+     {t:'PE',k:snap25(c-o.o2),  q:1,a:'B',lb:'BP −off2'}
+   ]},
   {id:'s50',pg:5,name:'JRC — JADE REV CONDOR',   lay:'l3',type:'credit',
-   desc:'Between VA+REJ · Reverting · 4 shorts + wings · R:R 46:1',dir:true,
+   desc:'Between VA+REJ · Bear:SC1ATM SC2+0.5A SP1−0.5A SP2−1.5A BC+1.5A BP−2.5A · R:R 46:1',dir:true,
    legs:(c,o,d)=>d==='bull'?[
-     {t:'PE',k:snap25(c),           q:1,a:'S',lb:'SP ATM'},
+     {t:'PE',k:snap25(c),           q:1,a:'S',lb:'SP1 ATM'},
      {t:'PE',k:snap25(c-o.o1*.5),  q:1,a:'S',lb:'SP2 −0.5A'},
-     {t:'CE',k:snap25(c+o.o1*.5),  q:1,a:'S',lb:'SC +0.5A'},
+     {t:'CE',k:snap25(c+o.o1*.5),  q:1,a:'S',lb:'SC1 +0.5A'},
      {t:'CE',k:snap25(c+o.o1*1.5), q:1,a:'S',lb:'SC2 +1.5A'},
      {t:'PE',k:snap25(c-o.o1*1.5), q:1,a:'B',lb:'BP −1.5A'},
-     {t:'CE',k:snap25(c+o.o1*2.5), q:1,a:'B',lb:'BC +2.5A'}]:[
-     {t:'CE',k:snap25(c),           q:1,a:'S',lb:'SC ATM'},
+     {t:'CE',k:snap25(c+o.o1*2.5), q:1,a:'B',lb:'BC +2.5A'}
+   ]:[
+     {t:'CE',k:snap25(c),           q:1,a:'S',lb:'SC1 ATM'},
      {t:'CE',k:snap25(c+o.o1*.5),  q:1,a:'S',lb:'SC2 +0.5A'},
-     {t:'PE',k:snap25(c-o.o1*.5),  q:1,a:'S',lb:'SP −0.5A'},
+     {t:'PE',k:snap25(c-o.o1*.5),  q:1,a:'S',lb:'SP1 −0.5A'},
      {t:'PE',k:snap25(c-o.o1*1.5), q:1,a:'S',lb:'SP2 −1.5A'},
      {t:'CE',k:snap25(c+o.o1*1.5), q:1,a:'B',lb:'BC +1.5A'},
-     {t:'PE',k:snap25(c-o.o1*2.5), q:1,a:'B',lb:'BP −2.5A'}]},
-  {id:'s51',pg:5,name:'MONITOR IC',              lay:'l3',type:'credit',
-   desc:'Between VA+REJ · Companion to JRC · Bull=Jade · Bear=RevJade · R:R 334:1',dir:true,
-   legs:(c,o,d)=>d==='bull'?[
-     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1'},
-     {t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC +off2'},
-     {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'},
-     {t:'CE',k:snap25(c+o.o3),q:1,a:'B',lb:'BC +off3'}]:[
-     {t:'CE',k:snap25(c+o.o1),q:1,a:'S',lb:'SC +off1'},
-     {t:'PE',k:snap25(c-o.o2),q:1,a:'S',lb:'SP −off2'},
-     {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'},
-     {t:'PE',k:snap25(c-o.o3),q:1,a:'B',lb:'BP −off3'}]},
-  // PAGE 6 — L4 JTC + TRAT
-  {id:'s60',pg:6,name:'JTC — JADE TREND CONDOR', lay:'l4',type:'credit',
-   desc:'Between VA+REJ · Trending · 4 shorts asymm · R:R 334:1',dir:true,
-   legs:(c,o,d)=>d==='bull'?[
-     {t:'CE',k:snap25(c+o.o1*2.5),q:1,a:'S',lb:'SC +2.5A'},
-     {t:'CE',k:snap25(c+o.o1*.5), q:1,a:'S',lb:'SC2 +0.5A'},
-     {t:'PE',k:snap25(c),          q:1,a:'S',lb:'SP ATM'},
-     {t:'PE',k:snap25(c-o.o1),     q:1,a:'S',lb:'SP2 −off1'},
-     {t:'CE',k:snap25(c+o.o1*3.5),q:1,a:'B',lb:'BC +3.5A'},
-     {t:'PE',k:snap25(c-o.o1*2),   q:1,a:'B',lb:'BP −2A'}]:[
-     {t:'PE',k:snap25(c-o.o1*2.5),q:1,a:'S',lb:'SP −2.5A'},
-     {t:'PE',k:snap25(c-o.o1*.5), q:1,a:'S',lb:'SP2 −0.5A'},
-     {t:'CE',k:snap25(c),          q:1,a:'S',lb:'SC ATM'},
-     {t:'CE',k:snap25(c+o.o1),     q:1,a:'S',lb:'SC2 +off1'},
-     {t:'PE',k:snap25(c-o.o1*3.5),q:1,a:'B',lb:'BP −3.5A'},
-     {t:'CE',k:snap25(c+o.o1*2),   q:1,a:'B',lb:'BC +2A'}]},
+     {t:'PE',k:snap25(c-o.o1*2.5), q:1,a:'B',lb:'BP −2.5A'}
+   ]},
   {id:'s61',pg:6,name:'TRAT — TREND RATIO',      lay:'l4',type:'credit',
-   desc:'Trending · HVP>50 · 2x ratio · ⚠ HALF SIZE mandatory',dir:true,
+   desc:'Trending · HVP>50 · Bull:SC2x+1.5A SP ATM SP2−0.5A BC+off3 BP−off2 · ⚠ HALF SIZE',dir:true,
    legs:(c,o,d)=>d==='bull'?[
-     {t:'CE',k:snap25(c+o.o1*1.5),q:2,a:'S',lb:'SC 2x +1.5A'},
-     {t:'PE',k:snap25(c),          q:1,a:'S',lb:'SP ATM'},
-     {t:'PE',k:snap25(c-o.o1*.5), q:1,a:'S',lb:'SP2 −0.5A'},
-     {t:'CE',k:snap25(c+o.o3),     q:1,a:'B',lb:'BC +off3'},
-     {t:'PE',k:snap25(c-o.o2),     q:1,a:'B',lb:'BP −off2'}]:[
-     {t:'PE',k:snap25(c-o.o1*1.5),q:2,a:'S',lb:'SP 2x −1.5A'},
-     {t:'CE',k:snap25(c),          q:1,a:'S',lb:'SC ATM'},
-     {t:'CE',k:snap25(c+o.o1*.5), q:1,a:'S',lb:'SC2 +0.5A'},
-     {t:'PE',k:snap25(c-o.o3),     q:1,a:'B',lb:'BP −off3'},
-     {t:'CE',k:snap25(c+o.o2),     q:1,a:'B',lb:'BC +off2'}]},
-  // PAGE 7 — Tortoises
-  // GF TORTOISE — Pine Script lines 885-890 exact:
-  // gfSC=snap25(cp+off1), gfBC=snap25(cp+off2), gfSP=snap25(cp-off2), gfBP=snap25(cp-off3)
-  // gfJrSC=snap25(cp) → FAR expiry journey leg
-  // Structure: RevJade (SC above, SP below asymmetric) + Journey SC ATM on far expiry
-  // Band 9/10 · HMA bear cross · SMI overbought → bearish mean-reversion
+     {t:'CE',k:snap25(c+o.o1*1.5),  q:2,a:'S',lb:'SC 2x +1.5A'},
+     {t:'PE',k:snap25(c),            q:1,a:'S',lb:'SP ATM'},
+     {t:'PE',k:snap25(c-o.o1*.5),   q:1,a:'S',lb:'SP2 −0.5A'},
+     {t:'CE',k:snap25(c+o.o3),       q:1,a:'B',lb:'BC +off3'},
+     {t:'PE',k:snap25(c-o.o2),       q:1,a:'B',lb:'BP −off2'}
+   ]:[
+     {t:'PE',k:snap25(c-o.o1*1.5),  q:2,a:'S',lb:'SP 2x −1.5A'},
+     {t:'CE',k:snap25(c),            q:1,a:'S',lb:'SC ATM'},
+     {t:'CE',k:snap25(c+o.o1*.5),   q:1,a:'S',lb:'SC2 +0.5A'},
+     {t:'PE',k:snap25(c-o.o3),       q:1,a:'B',lb:'BP −off3'},
+     {t:'CE',k:snap25(c+o.o2),       q:1,a:'B',lb:'BC +off2'}
+   ]},
   {id:'s70',pg:7,name:'GF TORTOISE (RevJade Bear)',lay:'tor',type:'credit',
    desc:'Band 9/10 · HMA↓cross · SMI OB · SC @+off1 · BC @+off2 · SP @−off2 · BP @−off3 · Journey SC ATM (far 90d)',
    note:'Main 4 legs use primary Expiry · Journey SC (ATM) uses Far Expiry ~90d',dir:false,
@@ -1000,32 +921,16 @@ const SP = [
   // gmJrSP=snap25(cp) → FAR expiry journey leg
   // Structure: Jade (SP below closer, SC above wider) + Journey SP ATM on far expiry
   // Band 1/2 · HMA bull cross · SMI oversold → bullish mean-reversion
-  {id:'s71',pg:7,name:'GM TORTOISE (Jade Bull)',   lay:'tor',type:'credit',
-   desc:'Band 1/2 · HMA↑cross · SMI OS · SP @−off1 · BP @−off2 · SC @+off2 · BC @+off3 · Journey SP ATM (far 90d)',
-   note:'Main 4 legs use primary Expiry · Journey SP (ATM) uses Far Expiry ~90d',dir:false,
-   legs:(c,o)=>[
-     {t:'PE',k:snap25(c-o.o1),q:1,a:'S',lb:'SP −off1 (Jade lower short, closer)'},
-     {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2 (put wing)'},
-     {t:'CE',k:snap25(c+o.o2),q:1,a:'S',lb:'SC +off2 (Jade upper short, wider)'},
-     {t:'CE',k:snap25(c+o.o3),q:1,a:'B',lb:'BC +off3 (call wing)'},
-     {t:'PE',k:snap25(c),     q:1,a:'S',lb:'Journey SP ATM (FAR ~90d)',far:true}
-   ]},
-  // PAGE 8 — Cobra + Batman
-  {id:'s80',pg:8,name:'KING COBRA',               lay:'spl',type:'credit',
-   desc:'VA · HVP<35 · ATM straddle + wings ±off2 · 0.5x · Pin mode',dir:false,
-   legs:(c,o)=>[{t:'CE',k:snap25(c),    q:1,a:'S',lb:'SC ATM'},
-                {t:'PE',k:snap25(c),    q:1,a:'S',lb:'SP ATM'},
-                {t:'CE',k:snap25(c+o.o2),q:1,a:'B',lb:'BC +off2'},
-                {t:'PE',k:snap25(c-o.o2),q:1,a:'B',lb:'BP −off2'}]},
   {id:'s81',pg:8,name:'RATIO BATMAN (Dual BWB)',  lay:'spl',type:'credit',
-   desc:'Conflict zone · HVP 35-65 · Bull-BWB + Bear-BWB · 0.5x · First move wins',dir:false,
-   legs:(c,o)=>[{t:'CE',k:snap25(c),        q:1,a:'B',lb:'Bull BC1 ATM'},
-                {t:'CE',k:snap25(c+o.o1),   q:2,a:'S',lb:'Bull SC 2x +off1'},
-                {t:'CE',k:snap25(c+o.o2),   q:1,a:'B',lb:'Bull BC2 +off2'},
-                {t:'PE',k:snap25(c),        q:1,a:'B',lb:'Bear BP1 ATM'},
-                {t:'PE',k:snap25(c-o.o1),   q:2,a:'S',lb:'Bear SP 2x −off1'},
-                {t:'PE',k:snap25(c-o.o2),   q:1,a:'B',lb:'Bear BP2 −off2'}]},
-  // PAGE 9 — Python/Boa
+   desc:'Conflict zone · HVP 35-65 · Bull-BWB+Bear-BWB · 0.5x · First committed move wins',dir:false,
+   legs:(c,o)=>[
+     {t:'CE',k:snap25(c),        q:1,a:'B',lb:'Bull BC1 ATM'},
+     {t:'CE',k:snap25(c+o.o1),  q:2,a:'S',lb:'Bull SC 2x +off1'},
+     {t:'CE',k:snap25(c+o.o2),  q:1,a:'B',lb:'Bull BC2 +off2'},
+     {t:'PE',k:snap25(c),        q:1,a:'B',lb:'Bear BP1 ATM'},
+     {t:'PE',k:snap25(c-o.o1),  q:2,a:'S',lb:'Bear SP 2x −off1'},
+     {t:'PE',k:snap25(c-o.o2),  q:1,a:'B',lb:'Bear BP2 −off2'}
+   ]},
   {id:'s90',pg:9,name:'PYTHON/BOA (Backspread)',  lay:'spl',type:'debit',
    desc:'HVP>60 · Outside VA · Long gamma · Bull=Call BS · Bear=Put BS',dir:true,
    legs:(c,o,d)=>d==='bull'?[
