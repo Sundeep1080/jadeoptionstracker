@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
-<title>⚡ JADE SUPREMA v17</title>
+<title>⚡ JADE SUPREMA v17.1</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -316,18 +316,22 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 .bdg-dte-x{background:var(--bear2);border:1px solid var(--bear);color:var(--bear)}
 .cbtns{display:flex;gap:3px;align-items:center}
 .dirbtn{
-  padding:3px 7px;font-size:8.5px;border:1px solid var(--b2);
+  padding:3px 9px;font-size:8px;border:1px solid var(--b2);
   background:var(--bg3);color:var(--dim);border-radius:var(--r);cursor:pointer;
-  font-family:'IBM Plex Mono',monospace;
+  font-family:'Inter',sans-serif;font-weight:500;letter-spacing:.3px;
 }
-.dirbtn.bull-on{background:var(--bull2);border-color:var(--bull);color:#b0f0c8}
-.dirbtn.bear-on{background:var(--bear2);border-color:var(--bear);color:#fcc}
+.dirbtn.bull-on{
+  background:var(--bull2);border-color:var(--bull);color:var(--bull);font-weight:700;
+}
+.dirbtn.bear-on{
+  background:var(--bear2);border-color:var(--bear);color:var(--bear);font-weight:700;
+}
 .cload{
-  padding:3px 8px;background:#1c2c10;border:1px solid var(--hi);
-  color:var(--hi);border-radius:var(--r);font-size:9px;cursor:pointer;
-  font-family:'IBM Plex Mono',monospace;
+  padding:3px 10px;background:var(--hi);border:1px solid var(--hi);
+  color:#fff;border-radius:var(--r);font-size:9px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-weight:600;
 }
-.cload:hover{background:#2a3e18}
+.cload:hover{filter:brightness(1.1)}
 
 /* 5-cell stats bar */
 .sbar{display:flex;background:var(--bg3);border-bottom:1px solid var(--b1)}
@@ -537,7 +541,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 <div id="authWrap">
 <div class="abox">
   <div class="atitle">⚡ JADE SUPREMA</div>
-  <div class="asub">SPREAD PREMIUM TRACKER · v17B</div>
+  <div class="asub">SPREAD PREMIUM TRACKER · v17.1B</div>
 
   <div id="savedBadge" class="saved-badge">✓ Credentials saved — token valid for today</div>
 
@@ -604,8 +608,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-s
 
   <!-- Config strip -->
   <div class="cfg">
-    <div class="cg"><label>Expiry</label>
-      <select id="sel_exp" class="w120" onchange="onExpiry()"><option>Loading…</option></select></div>
+    <div class="cg">
+      <label>Expiry <span id="expiry_badge" style="font-size:7px;padding:1px 4px;border-radius:2px;margin-left:4px"></span></label>
+      <select id="sel_exp" class="w120" onchange="onExpiry()"><option>Loading…</option></select>
+    </div>
     <div class="cg"><label>Far Exp</label>
       <select id="sel_far" class="w100"><option>—</option></select></div>
     <div class="csep"></div>
@@ -1458,9 +1464,26 @@ function onExpiry(){
   S.expiry=$('sel_exp').value;
   S.farExpiry=$('sel_far').value;
   $('hExp').textContent=S.expiry.slice(5);
-  $('hDte').textContent=calcDTE(S.expiry)+'d';
+  const dte=calcDTE(S.expiry);
+  $('hDte').textContent=dte+'d';
+  // Badge: PAST / LIVE / FUTURE
+  const badge=$('expiry_badge');
+  if(badge){
+    if(dte<0){
+      badge.textContent='EXPIRED';
+      badge.style.cssText='background:var(--bear2);color:var(--bear);font-size:7px;padding:1px 4px;border-radius:2px';
+    }else if(dte<=7){
+      badge.textContent='NEAR';
+      badge.style.cssText='background:var(--warn2);color:var(--warn);font-size:7px;padding:1px 4px;border-radius:2px';
+    }else if(dte>30){
+      badge.textContent='LIVE';
+      badge.style.cssText='background:var(--bull2);color:var(--bull);font-size:7px;padding:1px 4px;border-radius:2px';
+    }else{
+      badge.textContent=dte+'d left';
+      badge.style.cssText='background:var(--blue2);color:var(--blue);font-size:7px;padding:1px 4px;border-radius:2px';
+    }
+  }
   set50dte();
-  // Auto-fetch Entry Nifty close on the new From date
   setTimeout(fetchEntryNifty, 300);
 }
 function set50dte(){
@@ -1564,8 +1587,8 @@ function buildCard(sp){
   const noteHTML=sp.note?`<div class="card-note">⚠ ${sp.note}</div>`:'';
 
   const dirHTML=sp.dir?`
-    <button class="dirbtn ${dir==='bull'?'bull-on':''}" onclick="setDir('${sp.id}','bull')" style="font-size:8px">▲</button>
-    <button class="dirbtn ${dir==='bear'?'bear-on':''}" onclick="setDir('${sp.id}','bear')" style="font-size:8px">▼</button>`:'';
+    <button class="dirbtn ${dir==='bull'?'bull-on':''}" onclick="setDir('${sp.id}','bull')">▲ BULL</button>
+    <button class="dirbtn ${dir==='bear'?'bear-on':''}" onclick="setDir('${sp.id}','bear')">▼ BEAR</button>`:'';
 
   const el=document.createElement('div');
   el.className=`card ${sp.lay}`;
@@ -1899,8 +1922,19 @@ async function loadData(spId){
     if(dtw&&dtw.style.display==='block')renderDecayTable(spId);
     // Refresh cross-spread table if summary is open
     if(S.sumOpen)renderXtbl();
-    const barMsg=ohlc.length<10?` (⚠ only ${ohlc.length} bars — expiry too close)`:'';
+    const barMsg=ohlc.length<10
+      ?` ⚠ Only ${ohlc.length} bars — May 26 expiry just started. For full 50-DTE backtest, select a past expiry (e.g. Apr 17).`
+      :'';
     setSb('sbData',`${sp.name}: ${ohlc.length} bars${barMsg}`,ohlc.length<10?'warn':'ok');
+    if(ohlc.length<5){
+      // Show helpful message in chart area too
+      const pe=document.getElementById(`cprem_${spId}`);
+      if(pe&&ohlc.length<5)pe.innerHTML+=`<div style="padding:8px 12px;font-size:9px;color:var(--warn);background:var(--warn2);border-radius:4px;margin:8px">
+        ⚠ Only ${ohlc.length} trading day(s) of data — this expiry just started.<br>
+        For a meaningful backtest, select a <b>past expiry</b> from the dropdown<br>
+        (e.g. 2026-04-17 or 2026-03-27).
+      </div>`;
+    }
     if(miss.length){
       const n=$(`card_${spId}`)?.querySelector('.card-note');
       if(n)n.textContent=`⚠ Missing: ${miss.join(', ')} — omitted`;
@@ -3189,7 +3223,8 @@ function structCard(s) {
   const tagsHtml = (s.tags||[]).map(t =>
     `<span class="el-tag ${t.includes('tp:')?'tp':t.includes('sl:')?'sl':t.includes('x')||t.includes('HALF')?'sz':'dte'}">${t}</span>`
   ).join('');
-  return `<div class="el-card ${s.cardCls}" onclick="goToSpreadFromBriefing('${s.id}')">
+  const dir = s.cardCls==='eligible' ? (s.id[1]==='3'||s.id[1]==='4' ? (lastRegime&&lastRegime.bnd.aboveVA?'bear':'bull') : 'bear') : 'bear';
+  return `<div class="el-card ${s.cardCls}" onclick="goToSpreadFromBriefing('${s.id}','${dir}')">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div class="el-name">${s.name}</div>
       <span class="br-chip ${s.cardCls==='eligible'?'pass':s.cardCls==='waiting'?'warn':s.cardCls==='special'?'gold':'fail'}" style="font-size:7px;padding:1px 5px">${s.layer}</span>
@@ -3204,11 +3239,20 @@ function structCard(s) {
   </div>`;
 }
 
-function goToSpreadFromBriefing(spId) {
+function goToSpreadFromBriefing(spId, direction) {
   const sp = SP.find(s => s.id === spId);
   if (!sp) return;
+  // Set direction if provided and spread supports it
+  if(direction && sp.dir){
+    S.dirs[spId] = direction;
+  }
   closeBriefing();
   goPage(sp.pg);
+  // Scroll card into view after render
+  setTimeout(()=>{
+    const card=document.getElementById(`card_${spId}`);
+    if(card)card.scrollIntoView({behavior:'smooth',block:'center'});
+  },300);
 }
 
 // ═══════════════════════════════════════════════════════════════
