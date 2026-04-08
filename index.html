@@ -1406,11 +1406,19 @@ function combineOHLC(legCandles,signs){
   }
   const out=[];
   const sorted=[...tsMap.entries()].sort((a,b)=>a[0]-b[0]);
+  // Build last-known price cache for sparse legs (deep OTM may have gaps)
+  const lastKnown=new Array(legCandles.length).fill(null);
   for(const [ts,bars]of sorted){
-    if(bars.some(b=>!b))continue;
+    // Update last known prices
+    bars.forEach((b,i)=>{if(b)lastKnown[i]=b;});
+    // For daily: fill missing legs with last known price (sparse deep OTM)
+    const filled=bars.map((b,i)=>b||(lastKnown[i]?
+      // Create synthetic flat bar from last known close
+      [lastKnown[i][0],lastKnown[i][4],lastKnown[i][4],lastKnown[i][4],lastKnown[i][4],0]:null));
+    if(filled.some(b=>!b))continue;
     let o=0,h=0,l=0,c=0;
-    for(let i=0;i<bars.length;i++){
-      const[,bo,bh,bl,bc]=bars[i];
+    for(let i=0;i<filled.length;i++){
+      const[,bo,bh,bl,bc]=filled[i];
       const s=signs[i];
       o+=bo*s; c+=bc*s;
       h+=s>0?bh*s:bl*Math.abs(s);
@@ -1457,8 +1465,8 @@ function getOff(){
     o6:parseFloat($('inp_o6').value)||1200,
   };
 }
-function onCmp(){S.cmp=parseFloat($('inp_cmp').value)||24000;$('hCmp').textContent=S.cmp.toFixed(1);$('hCmp').style.color='#ffffff';}
-function onOff(){S.off=getOff();$('hA1').textContent=S.off.o1}
+function onCmp(){S.cmp=parseFloat($('inp_cmp').value)||24000;const hc=$('hCmp');if(hc){hc.textContent=S.cmp.toFixed(1);hc.style.color='#ffffff';}}
+function onOff(){S.off=getOff();const ha=$('hA1');if(ha)ha.textContent=S.off.o1;}
 function onTf(){S.tf=$('sel_tf').value}
 function onExpiry(){
   S.expiry=$('sel_exp').value;
@@ -2398,8 +2406,10 @@ function renderXtbl(){
 
   // Update header info
   const entEl=document.getElementById('inp_cmp');
-  document.getElementById('xt-entry-nifty').textContent=entEl?.value||'—';
-  document.getElementById('xt-expiry').textContent=expiry;
+  const xtNifty=document.getElementById('xt-entry-nifty');
+  const xtExp=document.getElementById('xt-expiry');
+  if(xtNifty)xtNifty.textContent=entEl?.value||'—';
+  if(xtExp)xtExp.textContent=expiry;
 
   // Build union of DTE values (50→15) across all loaded spreads
   const expTs=new Date(expiry+'T15:30:00+05:30').getTime()/1000;
@@ -3104,17 +3114,22 @@ async function loadBriefingData() {
     const regime = computeRegime(daily, intra);
     lastRegime = regime;
 
-    // Auto-update offsets in main config
+    // Auto-update offsets in main config (null-safe)
     if (regime) {
-      const o = regime.off;
-      ['o1','o2','o3','o4','o6'].forEach((k,i) => {
-        const vals = [o.off1, o.off2, o.off3, o.off4, o.off6];
-        const el = document.getElementById(`inp_${k}`);
-        if (el) { el.value = vals[i]; }
-      });
-      S.cmp = regime.cp;
-      document.getElementById('inp_cmp').value = Math.round(regime.cp/50)*50;
-      onCmp(); onOff();
+      try {
+        const o = regime.off;
+        ['o1','o2','o3','o4','o6'].forEach((k,i) => {
+          const vals = [o.off1, o.off2, o.off3, o.off4, o.off6];
+          const el = document.getElementById(`inp_${k}`);
+          if (el) el.value = vals[i];
+        });
+        S.cmp = regime.cp;
+        const cmpEl = document.getElementById('inp_cmp');
+        if (cmpEl) cmpEl.value = Math.round(regime.cp/50)*50;
+        // Only call onCmp/onOff if main app elements exist
+        if (document.getElementById('hCmp')) onCmp();
+        if (document.getElementById('hA1')) onOff();
+      } catch(domErr) { console.warn('BRIEF DOM update skipped:', domErr.message); }
     }
 
     renderBriefing(regime);
@@ -3128,6 +3143,9 @@ async function loadBriefingData() {
 }
 
 function renderBriefing(r) {
+  // Safety: ensure all required elements exist
+  const required=['br-timestamp','br-meta','br-gauges','br-offsets','br-bands','br-gate','br-grid','br-blocked-grid','br-blocked-count'];
+  for(const id of required){if(!document.getElementById(id)){console.warn('Missing element:',id);return;}}
   const now = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata',
     day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:false});
   document.getElementById('br-timestamp').textContent = now + ' IST — NIFTY ' + r.cp.toFixed(0);
